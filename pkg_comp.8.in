@@ -210,14 +210,17 @@ et. al. configuration variables.
 .Pp
 On completion, the packages directory configured by the
 .Va PACKAGES
-configuration variable will contain binary bootstrap kits for all built binaries
-and packages.
+configuration variable will contain the binary bootstrap kit and any
+bootstrap-related binary packages for the target environment, and
+.Va PBULK_PACKAGES
+will contain the same artifacts but for the pbulk environment used internally by
+.Nm .
 .Pp
 Any existing binaries within the
-.Va PACKAGES
+.Va PBULK_PACKAGES
 tree will be reused on subsequent bootstrap operations if found.
-If you want to start builds afresh, you will have to remove the previous binary
-packages.
+If you want to start builds afresh (and you should if you experience strange
+build failures), you will have to remove the previous binary packages.
 .Ss The build command
 The build command triggers the build of a set of packages within the
 sandbox via pbulk.
@@ -232,9 +235,7 @@ or as category/package pairs, such as
 .Pp
 On completion, the binary packages are left in the directory specified by the
 .Va PACKAGES
-configuration variable under a
-.Pa pkg
-subdirectory, which can later be fed to other tools such as
+configuration variable, which can later be fed to other tools such as
 .Xr pkg_add 8
 or
 .Xr pkgin 8
@@ -338,12 +339,12 @@ tree, and to build the same set of packages, you would do:
 .Pp
 After the commands above, and under the default configuration, you will find
 the resulting binary packages under
-.Pa /usr/pkgsrc/packages/pkg/All .
+.Pa /usr/pkgsrc/packages/All .
 All you need to do to use them via
 .Xr pkg_add 8
 is:
 .Bd -literal -offset indent
-# PKG_PATH=file:///usr/pkgsrc/packages/pkg/All; export PKG_PATH
+# PKG_PATH=file:///usr/pkgsrc/packages/All; export PKG_PATH
 # pkg_add sudo
 .Ed
 .Sh SEE ALSO
@@ -436,14 +437,6 @@ when bootstrapping pkgsrc on, e.g. macOS.
 Support for
 .Xr git 1
 will be added.
-.It
-The layout of the generated
-.Va PACKAGES
-tree currently conflates the two binary bootstrap kits and packages managed by
-.Nm .
-As a result, the tree contains two subdirectories, which is not what you would
-expect from standard pkgsrc builds.
-This will be fixed.
 .It
 .Nm
 is the successor to

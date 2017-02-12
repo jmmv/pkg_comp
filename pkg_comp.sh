@@ -40,8 +40,9 @@ shtk_import hw
 #
 # Please remember to update pkg_comp.conf(5) if you change this list.
 PKG_COMP_CONFIG_VARS="AUTO_PACKAGES CVSROOT CVSTAG DISTDIR EXTRA_MKCONF
-                      LOCALBASE NJOBS PACKAGES PKG_DBDIR PKGSRCDIR
-                      SANDBOX_CONFFILE SYSCONFDIR UPDATE_SOURCES VARBASE"
+                      LOCALBASE NJOBS PACKAGES PBULK_PACKAGES PKG_DBDIR
+                      PKGSRCDIR SANDBOX_CONFFILE SYSCONFDIR UPDATE_SOURCES
+                      VARBASE"
 
 
 # Paths to installed files.
@@ -65,6 +66,7 @@ pkg_comp_set_defaults() {
     shtk_config_set LOCALBASE "/usr/pkg"
     shtk_config_set NJOBS "$(shtk_hw_ncpus)"
     shtk_config_set PACKAGES "/usr/pkgsrc/packages"
+    shtk_config_set PBULK_PACKAGES "/usr/pkgsrc/packages/pbulk"
     shtk_config_set PKG_DBDIR "/usr/pkg/libdata/pkgdb"
     shtk_config_set PKGSRCDIR "/usr/pkgsrc"
     shtk_config_set SYSCONFDIR "/etc"
@@ -111,6 +113,8 @@ run_sandboxctl() {
             cat <<EOF
 DISTDIR="$(shtk_config_has DISTDIR && shtk_config_get DISTDIR)"
 PACKAGES="$(shtk_config_has PACKAGES && shtk_config_get PACKAGES)"
+PBULK_PACKAGES="$(shtk_config_has PBULK_PACKAGES \
+    && shtk_config_get PBULK_PACKAGES)"
 PKGSRCDIR="$(shtk_config_has PKGSRCDIR && shtk_config_get PKGSRCDIR)"
 EOF
             [ -z "${userconf}" ] || cat "${userconf}"
@@ -134,6 +138,7 @@ EOF
 #
 # \param basename Unique name for the pkg tree being configured.
 # \param root Path to the root of the sandbox.
+# \param packages Value of PACKAGES for this bootstrap kit.
 # \param pkgdbdir Value of PKG_DBDIR for this bootstrap kit.
 # \param prefix Value of PREFIX for this bootstrap kit.
 # \param sysconfdir Value of SYSCONFDIR for this bootstrap kit.
@@ -141,6 +146,7 @@ EOF
 setup_bootstrap() {
     local basename="${1}"; shift
     local root="${1}"; shift
+    local packages="${1}"; shift
     local pkgdbdir="${1}"; shift
     local prefix="${1}"; shift
     local sysconfdir="${1}"; shift
@@ -148,11 +154,11 @@ setup_bootstrap() {
 
     [ ! -f "${root}${prefix}/sbin/pkg_admin" ] || return 0
 
-    local binarykit="$(shtk_config_get PACKAGES)/bootstrap-${basename}.tgz"
+    local binarykit="${packages}/bootstrap.tgz"
     if [ -e "${binarykit}" ]; then
         shtk_cli_info "Setting up bootstrap in ${prefix} using binary kit"
         run_sandboxctl run /bin/sh -c \
-            "cd / && tar xzpf /pkg_comp/packages/bootstrap-${basename}.tgz" \
+            "cd / && tar xzpf /pkg_comp/packages/${basename}/bootstrap.tgz" \
             || exit
     else
         mkdir -p "${root}/pkg_comp/work"
@@ -162,7 +168,7 @@ setup_bootstrap() {
         # Wipe any previous bootstrap work directory.  This is helpful in
         # case a bootstrap execution failed for reasons unknown to us and
         # the user wants to retry without recreating the sandbox from scratch.
-        rm -rf "${root}/pkg_comp/work/bootstrap-${basename}"
+        rm -rf "${root}/pkg_comp/work/${basename}/bootstrap"
 
         shtk_cli_info "Setting up bootstrap in ${prefix} from scratch"
         run_sandboxctl run /bin/sh -c \
@@ -170,14 +176,14 @@ setup_bootstrap() {
                  DISTDIR=/pkg_comp/distfiles \
                  PACKAGES='/pkg_comp/packages/${basename}' \
                  ./bootstrap \
-                 --gzip-binary-kit=/pkg_comp/packages/bootstrap-${basename}.tgz\
+                 --gzip-binary-kit=/pkg_comp/packages/${basename}/bootstrap.tgz\
                  --make-jobs='$(shtk_config_get NJOBS)' \
                  --mk-fragment='/pkg_comp/work/mk.conf.fragment' \
                  --pkgdbdir='${pkgdbdir}' \
                  --prefix='${prefix}' \
                  --sysconfdir='${sysconfdir}' \
                  --varbase='${varbase}' \
-                 --workdir=/pkg_comp/work/bootstrap-${basename}" \
+                 --workdir=/pkg_comp/work/${basename}/bootstrap" \
             || exit
     fi
 }
@@ -205,9 +211,6 @@ setup_make() {
     shtk_cli_info "Setting up ${mk_conf}"
     cat >"${root}${mk_conf}" <<EOF
 DISTDIR=/pkg_comp/distfiles
-# TODO(jmmv): The subdirectory we create inside the packages tree to distinguish
-# the two bootstrap processes makes no sense in the typical semantics of the
-# PACKAGES tree.  Should expose the two trees explicitly to the user.
 PACKAGES=/pkg_comp/packages/${basename}
 PKGSRCDIR=/pkg_comp/pkgsrc
 WRKOBJDIR=/pkg_comp/work/${basename}
@@ -257,6 +260,7 @@ EOF
 #
 # \param basename Unique name for the pkg tree being configured.
 # \param root Path to the root of the sandbox.
+# \param packages Value of PACKAGES for this bootstrap kit.
 # \param pkgdbdir Value of PKG_DBDIR for this bootstrap kit.
 # \param prefix Value of PREFIX for this bootstrap kit.
 # \param sysconfdir Value of SYSCONFDIR for this bootstrap kit.
@@ -264,13 +268,14 @@ EOF
 full_bootstrap() {
     local basename="${1}"; shift
     local root="${1}"; shift
+    local packages="${1}"; shift
     local pkgdbdir="${1}"; shift
     local prefix="${1}"; shift
     local sysconfdir="${1}"; shift
     local varbase="${1}"; shift
 
-    setup_bootstrap "${basename}" "${root}" "${pkgdbdir}" "${prefix}" \
-        "${sysconfdir}" "${varbase}"
+    setup_bootstrap "${basename}" "${root}" "${packages}" "${pkgdbdir}" \
+        "${prefix}" "${sysconfdir}" "${varbase}"
     setup_make "${basename}" "${root}" "${sysconfdir}"
     setup_pkginstall "${basename}" "${root}" "${sysconfdir}" "${pkgdbdir}"
 }
@@ -285,6 +290,7 @@ bootstrap_pkg() {
     full_bootstrap \
         "pkg" \
         "${root}" \
+        "$(shtk_config_get PACKAGES)" \
         "$(shtk_config_get PKG_DBDIR)" \
         "$(shtk_config_get LOCALBASE)" \
         "$(shtk_config_get SYSCONFDIR)" \
@@ -301,14 +307,13 @@ bootstrap_pkg() {
 # Sets up a pkg installation for pbulk and also configures pbulk.
 #
 # \param root Path to the root of the sandbox.
-# \param pkg_basename Unique name of the pkg tree configured by bootstrap_pkg.
 bootstrap_pbulk() {
     local root="${1}"; shift
-    local pkg_basename="${1}"; shift
 
     full_bootstrap \
         "pbulk" \
         "${root}" \
+        "$(shtk_config_get PBULK_PACKAGES)" \
         "/pkg_comp/pbulk/libdata/pkgdb" \
         "/pkg_comp/pbulk" \
         "/pkg_comp/pbulk/etc" \
@@ -362,8 +367,8 @@ EOF
     pbulk_set loc /pkg_comp/work/bulklog/meta
 
     # Configure pkgsrc's file layout.
-    pbulk_set bootstrapkit "/pkg_comp/packages/bootstrap-${pkg_basename}.tgz"
-    pbulk_set packages "/pkg_comp/packages/${pkg_basename}"
+    pbulk_set bootstrapkit "/pkg_comp/packages/pkg/bootstrap.tgz"
+    pbulk_set packages "/pkg_comp/packages/pkg"
     pbulk_set pkgdb "$(shtk_config_get PKG_DBDIR)"
     pbulk_set pkgsrc /pkg_comp/pkgsrc
     pbulk_set prefix "$(shtk_config_get LOCALBASE)"
@@ -462,7 +467,7 @@ pkg_comp_bootstrap() {
     shtk_cli_info "Bootstrapping pkg tools"
     bootstrap_pkg "${root}" || exit
     shtk_cli_info "Bootstrapping pbulk tools"
-    bootstrap_pbulk "${root}" pkg || exit
+    bootstrap_pbulk "${root}" || exit
     touch "${root}/pkg_comp/done.bootstrap"
 }
 

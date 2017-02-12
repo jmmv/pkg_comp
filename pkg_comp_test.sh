@@ -112,6 +112,7 @@ EXTRA_MKCONF is undefined
 LOCALBASE = /usr/pkg
 NJOBS = 99
 PACKAGES = /usr/pkgsrc/packages
+PBULK_PACKAGES = /usr/pkgsrc/packages/pbulk
 PKG_DBDIR = /usr/pkg/libdata/pkgdb
 PKGSRCDIR = /usr/pkgsrc
 SANDBOX_CONFFILE is undefined
@@ -192,6 +193,7 @@ EXTRA_MKCONF is undefined
 LOCALBASE = /usr/pkg
 NJOBS = 80
 PACKAGES = /usr/pkgsrc/packages
+PBULK_PACKAGES = /usr/pkgsrc/packages/pbulk
 PKG_DBDIR = /usr/pkg/libdata/pkgdb
 PKGSRCDIR is undefined
 SANDBOX_CONFFILE = $(pwd)/sandbox.conf

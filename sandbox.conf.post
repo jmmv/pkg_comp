@@ -54,11 +54,14 @@ post_create_hook() {
     # sandbox... but this behavior is less annoying.
     mkdir -p "${DISTDIR}"
     mkdir -p "${PACKAGES}"
+    mkdir -p "${PBULK_PACKAGES}"
     mkdir -p "${PKGSRCDIR}"
 
     mkdir "${SANDBOX_ROOT}/pkg_comp"
     mkdir "${SANDBOX_ROOT}/pkg_comp/distfiles"
     mkdir "${SANDBOX_ROOT}/pkg_comp/packages"
+    mkdir "${SANDBOX_ROOT}/pkg_comp/packages/pbulk"
+    mkdir "${SANDBOX_ROOT}/pkg_comp/packages/pkg"
     mkdir "${SANDBOX_ROOT}/pkg_comp/pkgsrc"
 
     # Invoke the user-provided hook, which is guaranteed to exist by the
@@ -72,7 +75,9 @@ post_mount_hook() {
     _pkg_comp_validate_variables
 
     sandbox_bindfs -o rw "${DISTDIR}" "${SANDBOX_ROOT}/pkg_comp/distfiles"
-    sandbox_bindfs -o rw "${PACKAGES}" "${SANDBOX_ROOT}/pkg_comp/packages"
+    sandbox_bindfs -o rw "${PACKAGES}" "${SANDBOX_ROOT}/pkg_comp/packages/pkg"
+    sandbox_bindfs -o rw "${PBULK_PACKAGES}" \
+        "${SANDBOX_ROOT}/pkg_comp/packages/pbulk"
     sandbox_bindfs -o ro "${PKGSRCDIR}" "${SANDBOX_ROOT}/pkg_comp/pkgsrc"
 
     # Invoke the user-provided hook, which is guaranteed to exist by the

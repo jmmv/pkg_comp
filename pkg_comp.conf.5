@@ -25,7 +25,7 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.Dd February 6, 2017
+.Dd February 12, 2017
 .Dt PKG_COMP.CONF 5
 .Os
 .Sh NAME
@@ -106,17 +106,25 @@ Default:
 .Pa /usr/pkgsrc/distfiles .
 .It Va PACKAGES
 Absolute path to the directory in the host that will hold the built binary
-packages and bootstrap kits.
-.Pp
-At the end of a build, this directory will contain two subtrees: one called
-.Pa pkg
-with the packages built as part of the user's request, and one called
-.Pa pbulk
-with the packages built as part of the pbulk installation.
-You should only use the former set.
+packages and bootstrap kit for the target environment.
 .Pp
 Default:
 .Pa /usr/pkgsrc/packages .
+.It Va PBULK_PACKAGES
+Absolute path to the directory in the host that will hold the built binary
+packages and bootstrap kit for the pbulk installation in the sandbox.
+.Pp
+It does not make much sense to use these files outside of the sandbox because
+they are hardcoded to match the internal needs of
+.Xr pkg_comp 8
+(e.g. the paths used in these binary packages are not customizable).
+However,
+.Xr pkg_comp 8
+will reuse these files on subsequent rebuilds of the sandbox for speed, so you
+may want to keep them around.
+.Pp
+Default:
+.Pa /usr/pkgsrc/packages/pbulk .
 .It Va PKGSRCDIR
 Absolute path to the directory in the host that contains or will contain the
 pkgsrc tree.

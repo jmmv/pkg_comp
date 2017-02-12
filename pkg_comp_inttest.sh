@@ -80,7 +80,8 @@ integration_head() {
 integration_body() {
     cat >pkg_comp.conf <<EOF
 DISTDIR="$(atf_config_get distdir)"
-PACKAGES="$(pwd)/packages"
+PACKAGES="$(pwd)/packages/pkg"
+PBULK_PACKAGES="$(pwd)/packages/pbulk"
 PKGSRCDIR="$(atf_config_get pkgsrcdir)"
 SANDBOX_CONFFILE="$(pwd)/sandbox.conf"
 
@@ -142,11 +143,9 @@ reuse_bootstrap() {
         echo "Reusing any pre-existing bootstrap binary kits and packages."
         echo "Note: cp errors are normal here."
 
-        mkdir -p packages
-        cp "${packages}/bootstrap"-*.tgz packages || true
-
-        mkdir -p packages/pbulk/All
-        cp "${packages}/pbulk/All"/* packages/pbulk/All || true
+        mkdir -p packages/pkg
+        cp "${packages}/pkg/bootstrap.tgz" packages/pkg || true
+        cp -rf "${packages}/pbulk" packages || true
 
         # Reuse the list of packages built for pbulk as the "bootstrap" packages
         # to copy from the pkg tree.  This is an overapproximation though: the
@@ -167,12 +166,11 @@ reuse_bootstrap() {
 save_state() {
     if atf_config_has packages; then
         local packages="$(atf_config_get packages)"
-        cp packages/bootstrap-*.tgz "${packages}" || true
-
-        local packages="$(atf_config_get packages)"
         mkdir -p "${packages}/pbulk/All"
+        cp packages/pbulk/bootstrap.tgz "${packages}/pbulk" || true
         cp packages/pbulk/All/* "${packages}/pbulk/All" || true
         mkdir -p "${packages}/pkg/All"
+        cp packages/pkg/bootstrap.tgz "${packages}/pkg" || true
         cp packages/pkg/All/* "${packages}/pkg/All" || true
     fi
 }
@@ -212,13 +210,13 @@ bootstrap_workflow_intbody() {
     # files for later comparison with rebuilt sandboxes.
 
     check_files \
-        packages/bootstrap-pbulk.tgz \
-        packages/bootstrap-pkg.tgz \
         packages/pbulk/All/bmake-[0-9]* \
         packages/pbulk/All/pbulk-[0-9]* \
         packages/pbulk/All/pkg_install-[0-9]* \
+        packages/pbulk/bootstrap.tgz \
         packages/pkg/All/bmake-[0-9]* \
         packages/pkg/All/pkg_install-[0-9]* \
+        packages/pkg/bootstrap.tgz \
         sandbox/test/etc/mk.conf \
         sandbox/test/pkgdb/pkgdb.byfile.db \
         sandbox/test/prefix/bin/bmake
