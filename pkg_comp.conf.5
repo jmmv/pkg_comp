@@ -1,0 +1,201 @@
+.\" Copyright 2013 Google Inc.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions are
+.\" met:
+.\"
+.\" * Redistributions of source code must retain the above copyright
+.\"   notice, this list of conditions and the following disclaimer.
+.\" * Redistributions in binary form must reproduce the above copyright
+.\"   notice, this list of conditions and the following disclaimer in the
+.\"   documentation and/or other materials provided with the distribution.
+.\" * Neither the name of Google Inc. nor the names of its contributors
+.\"   may be used to endorse or promote products derived from this software
+.\"   without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+.\" LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+.\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.Dd February 6, 2017
+.Dt PKG_COMP.CONF 5
+.Os
+.Sh NAME
+.Nm pkg_comp.conf
+.Nd configuration file format for the pkg_comp tool
+.Sh DESCRIPTION
+Configuration files for
+.Xr pkg_comp 8
+are plain shell scripts that define a set of recognized variables and can
+optionally fill in a set of hooks provided as shell functions.
+.Ss Configuration variables
+As scripts, configuration files can perform any magic they desire to deduce
+the value of configuration variables.
+.Pp
+The following variables configure general settings:
+.Bl -tag -width SANDBOX_CONFFILE
+.It Va AUTO_PACKAGES
+Whitespace-separated list of package names that will be automatically built
+by the
+.Sq auto
+command unless package names are provided on the command line.
+This is akin to pbulk's
+.Dq limited list
+file contents, specifying the subset of packages that are interesting for
+this automated build.
+.Pp
+The packages to build can be provided either as bare names, such as
+.Sq tmux ,
+or as category/package pairs, such as
+.Sq misc/tmux .
+.It Va SANDBOX_CONFFILE
+Absolute path to a file in the host that contains the
+.Xr sandboxctl 8
+configuration to use for the build of packages.
+.Pp
+The contents of this file are slightly different than what
+.Xr sandboxctl 8
+accepts.
+In particular, if you want to define
+.Xr sandboxctl 8 Ns 's
+own
+.Fn post_create_hook
+and
+.Fn post_mount_hook
+hooks, you must define
+.Fn pkg_comp_post_create_hook
+and
+.Fn pkg_comp_post_mount_hook
+instead.
+Any changes to the former two will be discarded.
+.Pp
+Default: not defined.
+.El
+.Pp
+The following variables configure the pkgsrc environment on the host (i.e
+.Em Ns . outside
+of the sandbox):
+.Bl -tag -width SANDBOX_CONFFILE
+.It Va CVSROOT
+Location of the CVS root from which to check out or update the pkgsrc
+module.
+.Pp
+Default:
+.Sq :ext:anoncvs@anoncvs.NetBSD.org:/cvsroot .
+.It Va CVSTAG
+CVS tag to use during checkouts or updates of the pkgsrc module.
+.Pp
+Default: not defined.
+.It Va DISTDIR
+Absolute path to the directory in the host that holds the distribution
+files for pkgsrc (i.e. all the source files downloaded during the build of
+packages).
+.Pp
+This directory is mounted read-write within the sandbox to allow reuse of
+the immutable distribution files across rebuilds of the sandbox.
+.Pp
+Default:
+.Pa /usr/pkgsrc/distfiles .
+.It Va PACKAGES
+Absolute path to the directory in the host that will hold the built binary
+packages and bootstrap kits.
+.Pp
+At the end of a build, this directory will contain two subtrees: one called
+.Pa pkg
+with the packages built as part of the user's request, and one called
+.Pa pbulk
+with the packages built as part of the pbulk installation.
+You should only use the former set.
+.Pp
+Default:
+.Pa /usr/pkgsrc/packages .
+.It Va PKGSRCDIR
+Absolute path to the directory in the host that contains or will contain the
+pkgsrc tree.
+.Pp
+If you want
+.Xr pkg_comp 8
+to perform an update of this directory before every build, you will need
+write access to it.
+Otherwise, you can use a read-only directory.
+.Pp
+Default:
+.Pa /usr/pkgsrc .
+.It Va UPDATE_SOURCES
+Whether to perform an update of the source tree before every build or not.
+.Pp
+Default:
+.Sq true .
+.El
+.Pp
+The following variables configure the pkgsrc environment within the sandbox
+(i.e. how the packages will be built):
+.Bl -tag -width SANDBOX_CONFFILE
+.It Va EXTRA_MKCONF
+Absolute path to an optional file in the host that contains additional
+.Xr mk.conf 5
+contents to use for the build of packages within the sandbox.
+You can use this to configure settings like
+.Va ACCEPTABLE_LICENSES
+or
+.Va PKG_DEFAULT_OPTIONS .
+.Pp
+Default: not defined.
+.It Va LOCALBASE
+Absolute path to the directory where the packages will be installed.
+.Pp
+Default:
+.Pa /usr/pkg .
+.It Va NJOBS
+Number of
+.Xr make 1
+jobs to use during the build of packages.
+.Pp
+Default: number of CPUs in the machine.
+.It Va PKG_DBDIR
+Absolute path to the directory where
+.Xr pkg_add 8
+et. al. will maintain the database of installed directories.
+.Pp
+Default:
+.Pa /usr/pkg/libdata/pkgdb .
+.It Va SYSCONFDIR
+Absolute path to the directory in which to install managed configuration
+files.
+.Pp
+Default:
+.Pa /etc .
+.It Va VARBASE
+Absolute path to the directory that holds mutable data.
+.Pp
+Default:
+.Pa /var .
+.El
+.Ss Hooks
+Hooks are user-provided routines invoked at particular points during the
+build process.
+These are defined as shell functions and have access to the configuration
+variables in the file.
+Hooks must return a success error code and they cannot contain unprotected
+shell commands.
+In other words, they are run under a shell configured with
+.Sq set -e .
+.Pp
+The following hooks can be defined:
+.Bl -tag -width post_build_hookXX
+.It Fn post_fetch_hook
+Function executed right after all source trees have been updated by the
+.Sq fetch
+command.
+.El
+.Sh SEE ALSO
+.Xr sandbox.conf 5 ,
+.Xr pkg_comp 8

@@ -1,0 +1,7 @@
+syntax(2)
+
+test_suite("pkg_comp")
+
+atf_test_program{name="pkg_comp_inttest", is_exclusive=true}
+atf_test_program{name="pkg_comp_test"}
+plain_test_program{name="pkg_comp4cron_test"}

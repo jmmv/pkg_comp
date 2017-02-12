@@ -1,0 +1,25 @@
+# Configuration file for sandboxctl(8) to use with pkg_comp(8).
+#
+# The default configuration provided by this file has reasonable chances of
+# working out of the box on a system supported by sandboxctl(8), but the user
+# should review these contents regardless.
+#
+# See sandboxctl.conf(5) for details.
+
+# Inherit the default configuration for sandboxctl, which should be functional
+# for the current system even if the user has not yet tuned it.
+#
+# RECOMMENDED: Remove this chunk of configuration, explicitly set SANDBOX_TYPE
+# to match your system, and define any required type-specific settings.
+if [ -e '__PKG_COMP_BASESYSCONFDIR__/sandboxctl/default.conf' ]; then
+    . '__PKG_COMP_BASESYSCONFDIR__/sandboxctl/default.conf'
+else
+    # No valid system-wide sandboxctl configuration.  At the very least
+    # you must set the sandbox type, but you will also probably need to
+    # configure type-specific settings.
+    #SANDBOX_TYPE=netbsd-native
+    :
+fi
+
+# Location to use for the creation of the sandbox.
+SANDBOX_ROOT=/var/tmp/pkg_comp-sandbox

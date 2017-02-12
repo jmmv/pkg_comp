@@ -1,0 +1,33 @@
+Changes in version 2.0
+======================
+
+STILL UNDER DEVELOPMENT; NOT RELEASED YET.
+
+This is the first release of the pkg_comp project as a standalone
+package.  This new release shares no code with previous versions and is
+not compatible with them.
+
+The following are the major differences between pkg_comp 2.0 and all
+previous releases, which incidentally are the reasons that triggered
+this rewrite:
+
+* Support for multiple platforms.
+
+* Use of pbulk to (re)build packages within the sandbox.  This results
+  in more reliable incremental builds after pkgsrc updates.
+
+* Support for bootstrap, generating binary kits as part of the builds.
+
+* Better scriptability to allow running from cron(8) trivially.
+
+
+1.x versions
+============
+
+pkg_comp 1.x existed in pkgsrc from 2002-09-06 under the
+pkgtools/pkg_comp subdirectory and was later moved to pkgtools/pkg_comp1
+on 2017-02-12.
+
+The history of those releases can be found in the pkgsrc repository,
+but as the codebase was so different that the new code, I did not
+bother to port the notes to this file.

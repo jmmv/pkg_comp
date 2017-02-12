@@ -1,0 +1,24 @@
+# Configuration file for pkg_comp(8); see pkg_comp.conf(5) for details.
+#
+# This configuration file provides a sample setup to build a collection of
+# packages for the local machine.
+
+# Additional configuration files to support this setup.
+EXTRA_MKCONF="__PKG_COMP_ETCDIR__/extra.mk.conf"
+SANDBOX_CONFFILE="__PKG_COMP_ETCDIR__/sandbox.conf"
+
+# Host file layout.  These directories point to trees managed outside of
+# the sandbox and are exposed within the sandbox via null mounts.
+PKGSRCDIR="/usr/pkgsrc"
+DISTDIR="${PKGSRCDIR}/distfiles"
+PACKAGES="${PKGSRCDIR}/packages"
+
+# Target file layout.  These are the directories that the built binary
+# packages will use when installed.
+#LOCALBASE=/usr/pkg
+#PKG_DBDIR=/usr/pkg/libdata/pkgdb
+#SYSCONFDIR=/etc
+#VARBASE=/var
+
+# List of packages to build during automatic execution.
+#AUTO_PACKAGES="bash emacs kyua pkg_comp tmux"

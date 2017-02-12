@@ -1,0 +1,453 @@
+.\" Copyright 2013 Google Inc.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions are
+.\" met:
+.\"
+.\" * Redistributions of source code must retain the above copyright
+.\"   notice, this list of conditions and the following disclaimer.
+.\" * Redistributions in binary form must reproduce the above copyright
+.\"   notice, this list of conditions and the following disclaimer in the
+.\"   documentation and/or other materials provided with the distribution.
+.\" * Neither the name of Google Inc. nor the names of its contributors
+.\"   may be used to endorse or promote products derived from this software
+.\"   without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+.\" LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+.\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.Dd February 12, 2017
+.Dt PKG_COMP 8
+.Os
+.Sh NAME
+.Nm pkg_comp
+.Nd builds pkgsrc packages in a chroot environment
+.Sh SYNOPSIS
+.Nm
+.Op Fl c Ar config_name
+.Op Fl o Ar variable=value
+auto
+.Op Fl f
+.Op pkg1 Ar .. pkgN
+.Nm
+.Op Fl c Ar config_name
+.Op Fl o Ar variable=value
+bootstrap
+.Nm
+.Op Fl c Ar config_name
+.Op Fl o Ar variable=value
+build
+.Ar pkg1
+.Op Ar .. pkgN
+.Nm
+.Op Fl c Ar config_name
+.Op Fl o Ar variable=value
+config
+.Nm
+.Op Fl c Ar config_name
+.Op Fl o Ar variable=value
+fetch
+.Nm
+.Op Fl c Ar config_name
+.Op Fl o Ar variable=value
+sandbox-<command>
+.Op Ar arg1 .. argN
+.Sh DESCRIPTION
+.Nm
+is a utility to build pkgsrc packages in a fully automated and self-contained
+manner.
+The process is made unattended by relying on a configuration file that
+prespecifies the location of all build components, the environment in which to
+build the packages (aka the layout of the chroot sandbox), and the desired goals
+of the build.
+If you want to plug
+.Nm
+into
+.Xr cron 8 ,
+please take a look to
+.Xr pkg_comp4cron 8
+now.
+.Pp
+.Nm
+can be seen as a wrapper over
+.Xr cvs 1 ,
+the pbulk infrastructure provided by pkgsrc, and
+.Xr sandboxctl 8 .
+.Nm
+provides the following additional features:
+.Bl -bullet
+.It
+Automatically fetch or update the pkgsrc tree before performing a build.
+.It
+Preconfigure the way binary packages are built (file system layout, package
+options, etc.) by storing all relevant details in a configuration file.
+.It
+Preconfigure a clean environment (chroot sandbox) in which the packages are
+built to avoid system-wide side-effects and contamination.
+.It
+Trivially set up periodic pkgsrc rebuilds by adding a single line to your
+.Xr crontab 5 .
+.El
+.Pp
+As you can see in the
+.Sx SYNOPSIS
+section,
+.Nm
+provides a subcommand-interface: the tool has several modes of operation,
+and the particular mode to use for a given run is selected by the first
+non-option argument in the command line.
+.Pp
+The following options apply to all commands:
+.Bl -tag -width XXXX
+.It Fl c Ar config_name
+Specifies the configuration file to use.
+The format of the file is described in
+.Xr pkg_comp.conf 5 .
+.Pp
+If
+.Ar config_name
+includes any directory separator (aka, one or more slashes) or the
+.Sq .conf
+suffix, then this specifies the path of the configuration file to load.
+.Pp
+If
+.Ar config_name
+is a plain name without any directory components nor extension, then this
+specifies the name of the configuration.
+In this case,
+.Nm
+will use
+.Pa __PKG_COMP_ETCDIR__/<config_name>.conf ,
+which must exist; otherwise, the tool exits with an error.
+.It Fl o Ar variable=value
+Applies an override to the loaded configuration.
+.Pp
+The
+.Ar variable
+part of the argument must be any of the recognized configuration variables
+described in
+.Xr pkg_comp.conf 5 .
+The
+.Ar value ,
+if not empty, specifies the value to set the configuration variable to.
+If
+.Ar value
+is empty, then the configuration variable is unset.
+.El
+.Ss The auto command
+The auto command provides the main functionality of
+.Nm
+as it orchestrates all other subcommands in an unattended manner.
+This command allows you to trivially rebuild all the packages you are interested
+in at will, even as a periodic
+.Xr cron 8
+job; see
+.Xr pkg_comp4cron 8
+if you are interested in doing this.
+.Pp
+The auto command performs the following steps:
+.Bl -enum
+.It
+If
+.Va UPDATE_SOURCES
+is true, the fetch command is invoked first.
+See
+.Sx The fetch command
+for more details.
+.It
+Creates the sandbox by invoking the sandbox-create command.
+.It
+Bootstraps pkgsrc and pbulk within the sandbox by invoking the bootstrap
+command.
+See
+.Sx The bootstrap command
+for more details.
+.It
+Builds the set of packages given either in the
+.Va AUTO_PACKAGES
+configuration variable or on the command line by passing those to the
+build command.
+See
+.Sx The build command
+for more details.
+.It
+Destroys the sandbox by invoking the sandbox-destroy command.
+.El
+.Pp
+The following options apply only to the auto command:
+.Bl -tag -width XXXX
+.It Fl f
+Enables fast mode, which skips updating the source tree.
+This is a shorthand for these generic flags:
+.Fl o Ar UPDATE_SOURCES=false .
+.El
+.Ss The bootstrap command
+The bootstrap command prepares the pkgsrc infrastructure within the sandbox to
+be ready to build packages.
+This involves two steps:
+.Bl -enum
+.It
+Bootstraps pkgsrc and installs pbulk under the sandboxes'
+.Pa /pkg_comp/pbulk
+tree.
+This installation is used internally by
+.Nm
+thus is not configurable.
+.It
+Bootstraps pkgsrc in the location configured by the user via the
+.Va LOCALBASE
+et. al. configuration variables.
+.El
+.Pp
+On completion, the packages directory configured by the
+.Va PACKAGES
+configuration variable will contain binary bootstrap kits for all built binaries
+and packages.
+.Pp
+Any existing binaries within the
+.Va PACKAGES
+tree will be reused on subsequent bootstrap operations if found.
+If you want to start builds afresh, you will have to remove the previous binary
+packages.
+.Ss The build command
+The build command triggers the build of a set of packages within the
+sandbox via pbulk.
+The sandbox must have already been created with the sandbox-create command, but
+it need not have been bootstrapped yet; create takes care of bootstrapping if
+necessary.
+.Pp
+The packages to build can be provided either as bare names, such as
+.Sq tmux ,
+or as category/package pairs, such as
+.Sq misc/tmux .
+.Pp
+On completion, the binary packages are left in the directory specified by the
+.Va PACKAGES
+configuration variable under a
+.Pa pkg
+subdirectory, which can later be fed to other tools such as
+.Xr pkg_add 8
+or
+.Xr pkgin 8
+to install the resulting binary packages.
+.Pp
+Note that, due to the way pbulk works, this command will build the packages
+provided on the command line
+.Em and all other packages previously built within the sandbox .
+This is necessary to keep fully-populated
+.Xr pkg_summary 5
+databases.
+However, because pbulk reuses existing binary packages and only rebuilds updated
+packages, any packages not given on the command line should "build" quickly.
+.Ss The config command
+The config command dumps the loaded configuration to the standard output.
+The format of the output is not a script, so it cannot be fed back into
+.Nm .
+The purpose of this command is to aid in debugging the configuration of the
+tool before performing any builds, particularly when the configuration
+files use shell logic to determine the value of any variables.
+.Pp
+The output contains two separate "paragraphs": the first lists all options
+specific to
+.Nm ,
+including those given on the command line and in
+.Xr pkg_comp.conf 5 ;
+and the second lists all options passed to
+.Xr sandboxctl 8
+as specified in the configuration file pointed at by
+.Va SANDBOX_CONFFILE .
+.Ss The fetch command
+The fetch command downloads or updates the pkgrsrc tree.
+.Pp
+If the module do not exist yet in the location specified by
+.Va PKGSRCDIR ,
+this performs an initial CVS checkout of the tree.
+If the module exists, this performs a CVS update.
+.Pp
+The
+.Va CVSROOT
+and
+.Va CVSTAG
+variables are used to determine where to get the sources from and whether a
+particular tag is desired.
+.Ss Sandbox manipulation commands
+The
+.Sq sandbox-<command>
+family of commands are simple wrappers around
+.Xr sandboxctl 8
+using the sandbox configuration specified in the
+.Va SANDBOX_CONFFILE
+configuration variable.
+.Sh FILES
+.Bl -tag -width XXXX
+.It Pa __PKG_COMP_ETCDIR__/
+Directory containing all system-wide configuration files.
+.It Pa __PKG_COMP_ETCDIR__/default.conf
+Default configuration file to load if the
+.Fl c
+flag is not provided.
+.It Pa __PKG_COMP_ETCDIR__/extra.mk.conf
+Sample contents for possible free-form
+.Xr mk.conf 5
+extensions.
+This file is explicitly referenced from
+.Pa default.conf
+by the
+.Va EXTRA_MKCONF
+configuration variable.
+.It Pa __PKG_COMP_ETCDIR__/sandbox.conf
+Sample contents for the
+.Xr sandboxctl 8
+configuration file to use in the build of packages.
+This file is explicitly referenced from
+.Pa default.conf
+by the
+.Va SANDBOX_CONFFILE
+configuration variable.
+.El
+.Sh EXAMPLES
+The following examples assume that you have already configured
+.Xr pkg_comp.conf 5
+and its corresponding
+.Xr sandbox.conf 5
+file.
+.Pp
+To build a collection of packages from scratch, on a system in which you may not
+yet have pkgsrc nor an existent sandbox:
+.Bd -literal -offset indent
+# pkg_comp auto bash emacs sudo tmux
+.Ed
+.Pp
+To manually control the lifecycle of the sandbox, the updates to the pkgsrc
+tree, and to build the same set of packages, you would do:
+.Bd -literal -offset indent
+# pkg_comp sandbox-create
+# pkg_comp fetch
+# pkg_comp build bash emacs sudo tmux
+# pkg_comp sandbox-destroy
+.Ed
+.Pp
+After the commands above, and under the default configuration, you will find
+the resulting binary packages under
+.Pa /usr/pkgsrc/packages/pkg/All .
+All you need to do to use them via
+.Xr pkg_add 8
+is:
+.Bd -literal -offset indent
+# PKG_PATH=file:///usr/pkgsrc/packages/pkg/All; export PKG_PATH
+# pkg_add sudo
+.Ed
+.Sh SEE ALSO
+.Xr cvs 1 ,
+.Xr pkg_comp.conf 5 ,
+.Xr hier 7 ,
+.Xr pkg_comp4cron 8 ,
+.Xr sandboxctl 8
+.Sh HISTORY
+.Nm
+1.x first appeared in pkgsrc on September 6th, 2002 as the
+.Pa pkgtools/pkg_comp
+package and was later moved to
+.Pa pkgtools/pkg_comp1
+on February 12th, 2017, to make room for the 2.x series.
+The old code was moved aside, instead of just being replaced, because the
+1.x series are completely different to the 2.x series and the configuration
+cannot be trivially migrated.
+.Pp
+.Nm
+2.x, documented here, first appeared on TODO, 2017 as a full rewrite
+of the original tool.
+The rewrite had been in the works for years, seeing multiple iterations.
+The first was sometime in 2006, when I attempted to rewrite
+.Nm
+in the language I had just learned: Haskell.
+The second was sometime in 2010 or so, when I tried to rewrite the tool
+in Python soon after I joined Google as an SRE.
+The third, which is what you witness here together with the separate
+.Xr sandboxctl 8
+tool, started in 2013 but was put on hold pretty much until 2017 due to me
+spending more time with family.
+I was finally able to make the time to complete this rewrite by shifting my
+schedule to start the day at 5am.
+.Pp
+The main reasons for the 2.x rewrite, which involve a complete departure from
+the codebase of 1.x and its configuration interface, were the desire to make
+.Nm
+work across platforms, to integrate with pkgsrc's bootstrap and pbulk
+technologies, and to make it testable to ensure its reliability.
+.Pp
+See
+.Pa __PKG_COMP_DOCDIR__/NEWS
+for more details on the changes across releases.
+.Sh AUTHORS
+The
+.Nm
+utility was developed by
+.An Julio Merino
+.Aq jmmv@google.com .
+.Sh BUGS
+The following are known limitations in the current
+.Nm
+implementation.
+.Bl -bullet
+.It
+.Nm
+unconditionally configures a pkgsrc bootstrap kit for the target location given
+by the user in
+.Va LOCALBASE .
+This is intentional for simplicity and consistency across platforms but means
+that the
+.Xr pkg_add 8
+family of tools and
+.Xr make 1
+provided by the base system are ignored.
+.It
+Even though pkgsrc supports unprivileged builds,
+.Nm
+currently requires root.
+The reason is that
+.Nm
+relies on a sandbox created by
+.Xr sandboxctl 8
+to build packages, and entering a sandbox with
+.Xr chroot 8
+requires root privileges.
+It would be nice to lift this restriction so that users could rebuild personal
+sets of binary packages under their home directory.
+One option would be to make the use of a sandbox optional, with the
+understanding that not using a sandbox would leave any current set of installed
+packages non-functional during the build.
+.It
+.Nm
+currently only includes support for
+.Xr cvs 1
+to fetch the pkgsrc tree.
+This mimics the official upstream distribution mechanism but poses a problem
+when bootstrapping pkgsrc on, e.g. macOS.
+Support for
+.Xr git 1
+will be added.
+.It
+The layout of the generated
+.Va PACKAGES
+tree currently conflates the two binary bootstrap kits and packages managed by
+.Nm .
+As a result, the tree contains two subdirectories, which is not what you would
+expect from standard pkgsrc builds.
+This will be fixed.
+.It
+.Nm
+is the successor to
+.Xr pkg_comp 8 ,
+.Nm
+but still lacks some interesting features from its parent.
+.El
