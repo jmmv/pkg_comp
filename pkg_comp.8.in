@@ -438,9 +438,10 @@ Support for
 .Xr git 1
 will be added.
 .It
+This rewrite of
 .Nm
-is the successor to
-.Xr pkg_comp 8 ,
-.Nm
-but still lacks some interesting features from its parent.
+still lacks some interesting features from the 1.x line.
+For example, support for
+.Xr kver 3
+or the vulnerabilities database.
 .El
