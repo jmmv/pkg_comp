@@ -373,8 +373,8 @@ exit 0
 EOF
     chmod +x bin/cvs
     export PATH="$(pwd)/bin:${PATH}"
-    echo "CVSROOT=fake-cvsroot" >>pkg_comp.conf
-    echo "CVSTAG=fake-cvstag" >>pkg_comp.conf
+    echo "CVS_ROOT=fake-cvsroot" >>pkg_comp.conf
+    echo "CVS_TAG=fake-cvstag" >>pkg_comp.conf
 
     # Disable tests to make the build below a bit faster, and also to ensure
     # that the extra mk.conf fragment is picked up.

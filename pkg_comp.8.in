@@ -279,8 +279,8 @@ Note that local changes that conflict with remote changes will cause the fetch
 operation to fail.
 .Pp
 The
-.Va CVSROOT ,
-.Va CVSTAG ,
+.Va CVS_ROOT ,
+.Va CVS_TAG ,
 .Va FETCH_VCS ,
 .Va GIT_BRANCH
 and

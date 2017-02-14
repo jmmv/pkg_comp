@@ -83,7 +83,7 @@ Default: not defined.
 The following variables configure how to fetch pkgsrc from a version control
 system:
 .Bl -tag -width SANDBOX_CONFFILE
-.It Va CVSROOT
+.It Va CVS_ROOT
 Location of the CVS root from which to check out or update the pkgsrc
 module.
 .Pp
@@ -94,7 +94,7 @@ is set to
 .Pp
 Default:
 .Sq :ext:anoncvs@anoncvs.NetBSD.org:/cvsroot .
-.It Va CVSTAG
+.It Va CVS_TAG
 CVS tag to use during checkouts or updates of the pkgsrc module.
 .Pp
 This variable is only used if

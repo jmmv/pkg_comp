@@ -128,8 +128,8 @@ config__builtins_body() {
 
     cat >expout <<EOF
 AUTO_PACKAGES is undefined
-CVSROOT = :ext:anoncvs@anoncvs.NetBSD.org:/cvsroot
-CVSTAG is undefined
+CVS_ROOT = :ext:anoncvs@anoncvs.NetBSD.org:/cvsroot
+CVS_TAG is undefined
 DISTDIR = /usr/pkgsrc/distfiles
 EXTRA_MKCONF is undefined
 FETCH_VCS = cvs
@@ -158,8 +158,8 @@ config__path__components_body() {
     mkdir system
     export PKG_COMP_ETCDIR="$(pwd)/system"
 
-    echo "CVSTAG=tag1" >my-file
-    atf_check -o match:"CVSTAG = tag1" pkg_comp -c ./my-file config
+    echo "CVS_TAG=tag1" >my-file
+    atf_check -o match:"CVS_TAG = tag1" pkg_comp -c ./my-file config
 }
 
 
@@ -168,8 +168,8 @@ config__path__extension_body() {
     mkdir system
     export PKG_COMP_ETCDIR="$(pwd)/system"
 
-    echo "CVSTAG=tag2" >my-file.conf
-    atf_check -o match:"CVSTAG = tag2" pkg_comp -c my-file.conf config
+    echo "CVS_TAG=tag2" >my-file.conf
+    atf_check -o match:"CVS_TAG = tag2" pkg_comp -c my-file.conf config
 }
 
 
@@ -178,8 +178,8 @@ config__name__system_directory_body() {
     mkdir system
     export PKG_COMP_ETCDIR="$(pwd)/system"
 
-    echo "CVSROOT='custom-root'" >system/foo.conf
-    atf_check -o match:"CVSROOT = custom-root" pkg_comp -c foo config
+    echo "CVS_ROOT='custom-root'" >system/foo.conf
+    atf_check -o match:"CVS_ROOT = custom-root" pkg_comp -c foo config
 }
 
 
@@ -202,8 +202,8 @@ config__overrides_body() {
     export SANDBOXCTL_MODULESDIR="$(pwd)/sandbox-modules"
 
     cat >custom.conf <<EOF
-CVSROOT=the-root
-CVSTAG=the-tag
+CVS_ROOT=the-root
+CVS_TAG=the-tag
 PKGSRCDIR=/usr/pkgsrc
 EOF
     cat >sandbox.conf <<EOF
@@ -212,8 +212,8 @@ EOF
 
     cat >expout <<EOF
 AUTO_PACKAGES is undefined
-CVSROOT = foo bar
-CVSTAG = tag123
+CVS_ROOT = foo bar
+CVS_TAG = tag123
 DISTDIR = /usr/pkgsrc/distfiles
 EXTRA_MKCONF is undefined
 FETCH_VCS = cvs
@@ -233,8 +233,8 @@ VARBASE = /var
 SANDBOX_ROOT = /non-existent/location
 SANDBOX_TYPE = empty
 EOF
-    atf_check -o file:expout pkg_comp -c custom.conf -o CVSROOT="foo bar" \
-        -o CVSTAG=tag123 -o NJOBS=80 -o PKGSRCDIR= \
+    atf_check -o file:expout pkg_comp -c custom.conf -o CVS_ROOT="foo bar" \
+        -o CVS_TAG=tag123 -o NJOBS=80 -o PKGSRCDIR= \
         -o SANDBOX_CONFFILE="$(pwd)/sandbox.conf" config
 }
 
@@ -256,7 +256,7 @@ fetch__cvs__checkout_head() {
 fetch__cvs__checkout_body() {
     create_mock_cvsroot "${MOCK_CVSROOT}"
     cat >test.conf <<EOF
-CVSROOT="${MOCK_CVSROOT}"
+CVS_ROOT="${MOCK_CVSROOT}"
 PKGSRCDIR="$(pwd)/checkout/pkgsrc"
 EOF
 
@@ -272,7 +272,7 @@ fetch__cvs__update_head() {
 fetch__cvs__update_body() {
     create_mock_cvsroot "${MOCK_CVSROOT}"
     cat >test.conf <<EOF
-CVSROOT="${MOCK_CVSROOT}"
+CVS_ROOT="${MOCK_CVSROOT}"
 PKGSRCDIR="$(pwd)/checkout/pkgsrc"
 EOF
 
@@ -349,7 +349,7 @@ fetch__hooks__ok_head() {
 fetch__hooks__ok_body() {
     create_mock_cvsroot "${MOCK_CVSROOT}"
     cat >test.conf <<EOF
-CVSROOT="${MOCK_CVSROOT}"
+CVS_ROOT="${MOCK_CVSROOT}"
 PKGSRCDIR="$(pwd)/checkout/pkgsrc"
 
 post_fetch_hook() {
@@ -375,7 +375,7 @@ fetch__hooks__post_fail_head() {
 fetch__hooks__post_fail_body() {
     create_mock_cvsroot "${MOCK_CVSROOT}"
     cat >test.conf <<EOF
-CVSROOT="${MOCK_CVSROOT}"
+CVS_ROOT="${MOCK_CVSROOT}"
 PKGSRCDIR="$(pwd)/checkout/pkgsrc"
 
 post_fetch_hook() {

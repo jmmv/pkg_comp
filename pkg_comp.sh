@@ -40,7 +40,7 @@ shtk_import pkg_comp_git
 # List of valid configuration variables.
 #
 # Please remember to update pkg_comp.conf(5) if you change this list.
-PKG_COMP_CONFIG_VARS="AUTO_PACKAGES CVSROOT CVSTAG DISTDIR EXTRA_MKCONF
+PKG_COMP_CONFIG_VARS="AUTO_PACKAGES CVS_ROOT CVS_TAG DISTDIR EXTRA_MKCONF
                       FETCH_VCS GIT_BRANCH GIT_URL LOCALBASE NJOBS PACKAGES
                       PBULK_PACKAGES PKG_DBDIR PKGSRCDIR SANDBOX_CONFFILE
                       SYSCONFDIR UPDATE_SOURCES VARBASE"
@@ -62,7 +62,7 @@ PKG_COMP_CONFIG_VARS="AUTO_PACKAGES CVSROOT CVSTAG DISTDIR EXTRA_MKCONF
 pkg_comp_set_defaults() {
     # Please remember to update pkg_comp.conf(5) if you change any default
     # values.
-    shtk_config_set CVSROOT ":ext:anoncvs@anoncvs.NetBSD.org:/cvsroot"
+    shtk_config_set CVS_ROOT ":ext:anoncvs@anoncvs.NetBSD.org:/cvsroot"
     shtk_config_set DISTDIR "/usr/pkgsrc/distfiles"
     shtk_config_set FETCH_VCS "cvs"
     shtk_config_set GIT_BRANCH "trunk"
@@ -542,8 +542,8 @@ pkg_comp_fetch() {
 
     case "$(shtk_config_get FETCH_VCS)" in
         cvs)
-            shtk_cvs_fetch "$(shtk_config_get CVSROOT)" pkgsrc \
-                "$(shtk_config_get_default CVSTAG '')" \
+            shtk_cvs_fetch "$(shtk_config_get CVS_ROOT)" pkgsrc \
+                "$(shtk_config_get_default CVS_TAG '')" \
                 "$(shtk_config_get PKGSRCDIR)"
             ;;
 
