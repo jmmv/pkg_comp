@@ -25,7 +25,7 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.Dd February 12, 2017
+.Dd February 14, 2017
 .Dt PKG_COMP.CONF 5
 .Os
 .Sh NAME
@@ -80,20 +80,66 @@ Any changes to the former two will be discarded.
 Default: not defined.
 .El
 .Pp
-The following variables configure the pkgsrc environment on the host (i.e
-.Em Ns . outside
-of the sandbox):
+The following variables configure how to fetch pkgsrc from a version control
+system:
 .Bl -tag -width SANDBOX_CONFFILE
 .It Va CVSROOT
 Location of the CVS root from which to check out or update the pkgsrc
 module.
+.Pp
+This variable is only used if
+.Va FETCH_VCS
+is set to
+.Sq cvs .
 .Pp
 Default:
 .Sq :ext:anoncvs@anoncvs.NetBSD.org:/cvsroot .
 .It Va CVSTAG
 CVS tag to use during checkouts or updates of the pkgsrc module.
 .Pp
+This variable is only used if
+.Va FETCH_VCS
+is set to
+.Sq cvs .
+.Pp
 Default: not defined.
+.It Va FETCH_VCS
+Determines the version control system to use to fetch the pkgsrc tree.
+Can be one of
+.Sq cvs
+or
+.Sq git .
+The requested tool must be installed on the system.
+.Pp
+Default:
+.Sq cvs .
+.It Va GIT_BRANCH
+Git branch to use during clones or updates of the pkgsrc working copy.
+.Pp
+This variable is only used if
+.Va FETCH_VCS
+is set to
+.Sq git .
+.Pp
+Default:
+.Sq trunk .
+.It Va GIT_URL
+Git remote URL specification to use during clones or updates of the pkgsrc
+working copy.
+.Pp
+This variable is only used if
+.Va FETCH_VCS
+is set to
+.Sq git .
+.Pp
+Default:
+.Sq https://github.com/jsonn/pkgsrc.git .
+.El
+.Pp
+The following variables configure the pkgsrc environment on the host (i.e
+.Em Ns . outside
+of the sandbox):
+.Bl -tag -width SANDBOX_CONFFILE
 .It Va DISTDIR
 Absolute path to the directory in the host that holds the distribution
 files for pkgsrc (i.e. all the source files downloaded during the build of

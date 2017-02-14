@@ -98,6 +98,29 @@ create_mock_cvsroot() {
 }
 
 
+# Creates a fake CVS repository with multiple branches.
+#
+# \param repository Path to the repository to create.
+# \param ... Names of the branches to create.  Each branch will contain a file
+#     named "file" with different contents for each branch.
+create_git_repo_and_branches() {
+    local repository="${1}"
+
+    git init "${repository}"
+    cd "${repository}"
+
+    for branch in "${@}"; do
+        git checkout -b "${branch}"
+        echo "${branch} branch" >file
+        git add file
+        git commit -m "a revision"
+    done
+
+    git checkout -b other
+    cd -
+}
+
+
 atf_test_case config__builtins
 config__builtins_body() {
     mkdir sandbox-modules
@@ -109,6 +132,9 @@ CVSROOT = :ext:anoncvs@anoncvs.NetBSD.org:/cvsroot
 CVSTAG is undefined
 DISTDIR = /usr/pkgsrc/distfiles
 EXTRA_MKCONF is undefined
+FETCH_VCS = cvs
+GIT_BRANCH = trunk
+GIT_URL = https://github.com/jsonn/pkgsrc.git
 LOCALBASE = /usr/pkg
 NJOBS = 99
 PACKAGES = /usr/pkgsrc/packages
@@ -190,6 +216,9 @@ CVSROOT = foo bar
 CVSTAG = tag123
 DISTDIR = /usr/pkgsrc/distfiles
 EXTRA_MKCONF is undefined
+FETCH_VCS = cvs
+GIT_BRANCH = trunk
+GIT_URL = https://github.com/jsonn/pkgsrc.git
 LOCALBASE = /usr/pkg
 NJOBS = 80
 PACKAGES = /usr/pkgsrc/packages
@@ -220,11 +249,11 @@ EOF
 }
 
 
-atf_test_case fetch__checkout
-fetch__checkout_head() {
+atf_test_case fetch__cvs__checkout
+fetch__cvs__checkout_head() {
     atf_set require.progs cvs
 }
-fetch__checkout_body() {
+fetch__cvs__checkout_body() {
     create_mock_cvsroot "${MOCK_CVSROOT}"
     cat >test.conf <<EOF
 CVSROOT="${MOCK_CVSROOT}"
@@ -236,11 +265,11 @@ EOF
 }
 
 
-atf_test_case fetch__update
-fetch__update_head() {
+atf_test_case fetch__cvs__update
+fetch__cvs__update_head() {
     atf_set require.progs cvs
 }
-fetch__update_body() {
+fetch__cvs__update_body() {
     create_mock_cvsroot "${MOCK_CVSROOT}"
     cat >test.conf <<EOF
 CVSROOT="${MOCK_CVSROOT}"
@@ -267,6 +296,49 @@ EOF
 
     grep "second revision" checkout/pkgsrc/file-in-pkgsrc >/dev/null \
         || atf_fail "pkgsrc not updated"
+}
+
+
+atf_test_case fetch__git__clone
+fetch__git__clone_head() {
+    atf_set require.progs git
+}
+fetch__git__clone_body() {
+    create_git_repo_and_branches repo trunk1 trunk2
+
+    cat >test.conf <<EOF
+FETCH_VCS=git
+GIT_BRANCH=trunk2
+GIT_URL="file://$(pwd)/repo"
+PKGSRCDIR="$(pwd)/checkout/pkgsrc"
+EOF
+
+    atf_check -o ignore -e ignore pkg_comp -c test.conf fetch
+    atf_check -o inline:'trunk2 branch\n' cat checkout/pkgsrc/file
+}
+
+
+atf_test_case fetch__git__update
+fetch__git__update_head() {
+    atf_set require.progs git
+}
+fetch__git__update_body() {
+    create_git_repo_and_branches repo trunk1 trunk2
+
+    mkdir checkout
+    atf_check -o ignore -e ignore \
+        git clone -b trunk2 "file://$(pwd)/repo" checkout/pkgsrc
+
+    cat >test.conf <<EOF
+FETCH_VCS=git
+GIT_BRANCH=trunk1
+GIT_URL="file://$(pwd)/repo"
+PKGSRCDIR="$(pwd)/checkout/pkgsrc"
+EOF
+
+    atf_check -o inline:'trunk2 branch\n' cat checkout/pkgsrc/file
+    atf_check -o ignore -e ignore pkg_comp -c test.conf fetch
+    atf_check -o inline:'trunk1 branch\n' cat checkout/pkgsrc/file
 }
 
 
@@ -436,8 +508,10 @@ atf_init_test_cases() {
     atf_add_test_case config__overrides
     atf_add_test_case config__too_many_args
 
-    atf_add_test_case fetch__checkout
-    atf_add_test_case fetch__update
+    atf_add_test_case fetch__cvs__checkout
+    atf_add_test_case fetch__cvs__update
+    atf_add_test_case fetch__git__clone
+    atf_add_test_case fetch__git__update
     atf_add_test_case fetch__hooks__ok
     atf_add_test_case fetch__hooks__post_fail
     atf_add_test_case fetch__too_many_args

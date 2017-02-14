@@ -25,7 +25,7 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.Dd February 12, 2017
+.Dd February 14, 2017
 .Dt PKG_COMP 8
 .Os
 .Sh NAME
@@ -79,7 +79,9 @@ now.
 .Pp
 .Nm
 can be seen as a wrapper over
-.Xr cvs 1 ,
+.Xr cvs 1
+and
+.Xr git 1 ,
 the pbulk infrastructure provided by pkgsrc, and
 .Xr sandboxctl 8 .
 .Nm
@@ -267,19 +269,24 @@ and the second lists all options passed to
 as specified in the configuration file pointed at by
 .Va SANDBOX_CONFFILE .
 .Ss The fetch command
-The fetch command downloads or updates the pkgrsrc tree.
+The fetch command downloads or updates the pkgsrc tree.
 .Pp
-If the module do not exist yet in the location specified by
+If the tree does not exist yet in the location specified by
 .Va PKGSRCDIR ,
-this performs an initial CVS checkout of the tree.
-If the module exists, this performs a CVS update.
+this performs an initial checkout using the version control system of choice;
+otherwise, this updates the local copy, preserving any changes that may exist.
+Note that local changes that conflict with remote changes will cause the fetch
+operation to fail.
 .Pp
 The
-.Va CVSROOT
+.Va CVSROOT ,
+.Va CVSTAG ,
+.Va FETCH_VCS ,
+.Va GIT_BRANCH
 and
-.Va CVSTAG
+.Va GIT_URL
 variables are used to determine where to get the sources from and whether a
-particular tag is desired.
+particular branch is desired.
 .Ss Sandbox manipulation commands
 The
 .Sq sandbox-<command>
@@ -427,16 +434,6 @@ sets of binary packages under their home directory.
 One option would be to make the use of a sandbox optional, with the
 understanding that not using a sandbox would leave any current set of installed
 packages non-functional during the build.
-.It
-.Nm
-currently only includes support for
-.Xr cvs 1
-to fetch the pkgsrc tree.
-This mimics the official upstream distribution mechanism but poses a problem
-when bootstrapping pkgsrc on, e.g. macOS.
-Support for
-.Xr git 1
-will be added.
 .It
 This rewrite of
 .Nm

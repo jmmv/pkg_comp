@@ -7,6 +7,13 @@
 EXTRA_MKCONF="__PKG_COMP_ETCDIR__/extra.mk.conf"
 SANDBOX_CONFFILE="__PKG_COMP_ETCDIR__/sandbox.conf"
 
+# Remote VCS configuration.
+#FETCH_VCS=cvs
+#CVSROOT=:ext:anoncvs@anoncvs.NetBSD.org:/cvsroot
+#CVSTAG=pkgsrc-2017Q1
+#GIT_URL=https://github.com/jsonn/pkgsrc.git
+#GIT_BRANCH=trunk
+
 # Host file layout.  These directories point to trees managed outside of
 # the sandbox and are exposed within the sandbox via null mounts.
 PKGSRCDIR="/usr/pkgsrc"

@@ -34,15 +34,16 @@ shtk_import cli
 shtk_import config
 shtk_import cvs
 shtk_import hw
+shtk_import pkg_comp_git
 
 
 # List of valid configuration variables.
 #
 # Please remember to update pkg_comp.conf(5) if you change this list.
 PKG_COMP_CONFIG_VARS="AUTO_PACKAGES CVSROOT CVSTAG DISTDIR EXTRA_MKCONF
-                      LOCALBASE NJOBS PACKAGES PBULK_PACKAGES PKG_DBDIR
-                      PKGSRCDIR SANDBOX_CONFFILE SYSCONFDIR UPDATE_SOURCES
-                      VARBASE"
+                      FETCH_VCS GIT_BRANCH GIT_URL LOCALBASE NJOBS PACKAGES
+                      PBULK_PACKAGES PKG_DBDIR PKGSRCDIR SANDBOX_CONFFILE
+                      SYSCONFDIR UPDATE_SOURCES VARBASE"
 
 
 # Paths to installed files.
@@ -63,6 +64,9 @@ pkg_comp_set_defaults() {
     # values.
     shtk_config_set CVSROOT ":ext:anoncvs@anoncvs.NetBSD.org:/cvsroot"
     shtk_config_set DISTDIR "/usr/pkgsrc/distfiles"
+    shtk_config_set FETCH_VCS "cvs"
+    shtk_config_set GIT_BRANCH "trunk"
+    shtk_config_set GIT_URL "https://github.com/jsonn/pkgsrc.git"
     shtk_config_set LOCALBASE "/usr/pkg"
     shtk_config_set NJOBS "$(shtk_hw_ncpus)"
     shtk_config_set PACKAGES "/usr/pkgsrc/packages"
@@ -534,11 +538,26 @@ pkg_comp_config() {
 pkg_comp_fetch() {
     [ ${#} -eq 0 ] || shtk_cli_usage_error "fetch does not take any arguments"
 
-    local cvsroot="$(shtk_config_get CVSROOT)"
-
     shtk_cli_info "Updating pkgsrc tree"
-    shtk_cvs_fetch "${cvsroot}" pkgsrc "$(shtk_config_get_default CVSTAG '')" \
-        "$(shtk_config_get PKGSRCDIR)"
+
+    case "$(shtk_config_get FETCH_VCS)" in
+        cvs)
+            shtk_cvs_fetch "$(shtk_config_get CVSROOT)" pkgsrc \
+                "$(shtk_config_get_default CVSTAG '')" \
+                "$(shtk_config_get PKGSRCDIR)"
+            ;;
+
+        git)
+            pkg_comp_git_fetch "$(shtk_config_get GIT_URL)" \
+                "$(shtk_config_get GIT_BRANCH)" \
+                "$(shtk_config_get PKGSRCDIR)"
+            ;;
+
+        *)
+            shtk_cli_error "Unknown VCS name in FETCH_VCS; found" \
+                "$(shtk_config_get FETCH_VCS)"
+            ;;
+    esac
 
     shtk_config_run_hook post_fetch_hook
 }
