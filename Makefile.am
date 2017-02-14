@@ -90,10 +90,21 @@ sandbox.conf: $(srcdir)/sandbox.conf.in
 
 dist_pkgdata_DATA = sandbox.conf.pre sandbox.conf.post
 
+shtk_modulesdir = $(SHTK_MODULESDIR)
+dist_shtk_modules_DATA = pkg_comp_git.subr
+
 if WITH_ATF
 dist_pkgtests_DATA = Kyuafile
 
-pkgtests_SCRIPTS = pkg_comp_test
+pkgtests_SCRIPTS = pkg_comp_git_test
+CLEANFILES += pkg_comp_git_test
+EXTRA_DIST += pkg_comp_git_test.sh
+pkg_comp_git_test: $(srcdir)/pkg_comp_git_test.sh
+	$(AM_V_GEN)source="$(srcdir)/pkg_comp_git_test.sh" \
+	target=pkg_comp_git_test; \
+	$(BUILD_TEST)
+
+pkgtests_SCRIPTS += pkg_comp_test
 CLEANFILES += pkg_comp_test
 EXTRA_DIST += pkg_comp_test.sh
 pkg_comp_test: $(srcdir)/pkg_comp_test.sh
@@ -118,6 +129,7 @@ if HAVE_KYUA
 CHECK_ENVIRONMENT  = PATH=$(abs_top_builddir):$${PATH}
 CHECK_ENVIRONMENT += PKG_COMP_ETCDIR=$(abs_top_srcdir)
 CHECK_ENVIRONMENT += PKG_COMP_SHAREDIR=$(abs_top_srcdir)
+CHECK_ENVIRONMENT += SHTK_MODULESPATH=$(abs_top_srcdir):$${SHTK_MODULESPATH}
 INSTALLCHECK_ENVIRONMENT = PATH=$(prefix)/sbin:$${PATH}
 
 check-local: check-kyua

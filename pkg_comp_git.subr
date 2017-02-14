@@ -1,0 +1,112 @@
+# Copyright 2017 Google Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the distribution.
+# * Neither the name of Google Inc. nor the names of its contributors
+#   may be used to endorse or promote products derived from this software
+#   without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# \file pkg_comp_git.subr
+# Utilities to invoke git, similar to shtk_cvs(3).
+#
+# This is an shtk module and, given its generic functionality and its
+# similiarity to shtk_cvs(3), it should live in the shtk distribution.
+# TODO(jmmv): Move this module to shtk once stabilized.
+
+shtk_import cli
+shtk_import process
+
+
+pkg_comp_git_fetch() {
+    local url="${1}"; shift
+    local branch="${1}"; shift
+    local directory="${1}"; shift
+
+    if [ -d "${directory}" ]; then
+        pkg_comp_git_update "${url}" "${branch}" "${directory}"
+    else
+        pkg_comp_git_clone "${url}" "${branch}" "${directory}"
+    fi
+}
+
+
+pkg_comp_git_clone() {
+    local url="${1}"; shift
+    local branch="${1}"; shift
+    local directory="${1}"; shift
+
+    local rflag=
+    [ -z "${tag}" ] || rflag="-r${tag}"
+
+    [ ! -d "${directory}" ] || shtk_cli_error "Cannot clone into" \
+        "${directory}; directory already exists"
+    if ! shtk_process_run git clone -b "${branch}" "${url}" "${directory}"
+    then
+        rm -rf "${directory}"
+        shtk_cli_error "Git clone failed"
+    fi
+}
+
+
+pkg_comp_git_update() {
+    local url="${1}"; shift
+    local branch="${1}"; shift
+    local directory="${1}"; shift
+
+    [ -d "${directory}" ] || shtk_cli_error "Cannot update ${directory};" \
+        "directory does not exist"
+
+    (
+        cd "${directory}"
+
+        shtk_process_run git fetch "${url}" "${branch}" \
+            || shtk_cli_error "Git fetch failed"
+
+        local modified=no
+        [ -z "$(git status --porcelain 2>&1 | grep -vE '^(\?\?|!!)')" ] \
+            || modified=yes
+
+        # It is tempting to use "git stash save --all"... but depending on how
+        # pkg_comp has been configured, the distfiles and the packages may be
+        # located within the pkgsrc tree and these are not recorded in
+        # .gitignore (because git is not authoritative).  Stashing these large
+        # binary files would cause a lot of churn for little benefit.
+        [ "${modified}" = no ] || \
+            shtk_process_run git stash save \
+                || shtk_cli_error "Local changes detected but could not save" \
+                "them"
+
+        # The pkgsrc repository's history often gets rewritten because the
+        # commit messages are amended in the master CVS repository.  This causes
+        # a simple pull to fail, so be more aggressive.
+        shtk_process_run git checkout "${branch}" \
+            || shtk_cli_error "Failed to switch to desired branch"
+        shtk_process_run git reset --hard FETCH_HEAD \
+            || shtk_cli_error "Failed to update branch to fetched head"
+
+        [ "${modified}" = no ] || \
+            shtk_process_run git stash apply \
+                || shtk_cli_error "Failed to restore local changes after" \
+                                  "branch update"
+    ) || exit  # Error messages reported by subshell so just propagate code.
+}
