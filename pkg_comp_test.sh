@@ -368,7 +368,8 @@ atf_test_case sandboxctl__create_destroy_integration
 sandboxctl__create_destroy_integration_body() {
     cat >pkg_comp.conf <<EOF
 DISTDIR="$(pwd)/distfiles"
-PACKAGES="$(pwd)/packages"
+PACKAGES="$(pwd)/packages/pkg"
+PBULK_PACKAGES="$(pwd)/packages/pbulk"
 PKGSRCDIR="$(pwd)/pkgsrc"
 SANDBOX_CONFFILE="$(pwd)/sandbox.conf"
 EOF
