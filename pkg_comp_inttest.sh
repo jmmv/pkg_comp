@@ -453,9 +453,41 @@ EOF
 }
 
 
+integration_test_case auto_workflow_reusing_sandbox
+auto_workflow_reusing_sandbox_intbody() {
+    reuse_bootstrap
+    reuse_packages cwrappers digest pkgconf shtk sysbuild
+
+    # Disable tests to make the build below a bit faster.
+    echo "PKG_DEFAULT_OPTIONS=-tests" >extra.mk.conf
+    echo "EXTRA_MKCONF='$(pwd)/extra.mk.conf'" >>pkg_comp.conf
+
+    atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf sandbox-create
+
+    check_files sandbox
+    atf_check \
+        -o not-match:'Starting build of .*atf-[0-9]' \
+        -o match:'Starting build of .*shtk-[0-9]' \
+        -o match:'Successfully built .*shtk-[0-9]' \
+        -o not-match:'Starting build of .*sysbuild-[0-9]' \
+        -o not-match:'Successfully built .*sysbuild-[0-9]' \
+        -e not-match:'pkg_comp: I: Updating pkgsrc tree' \
+        -e match:'pkg_comp: W: Reusing existing sandbox' \
+        pkg_comp -c pkg_comp.conf auto -f shtk
+    check_files packages/pkg/All/shtk-[0-9]*
+    check_files packages/pkg/All/sysbuild-[0-9]*
+    check_files sandbox
+
+    atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf sandbox-destroy
+
+    save_state
+}
+
+
 atf_init_test_cases() {
     atf_add_test_case bootstrap_workflow
     atf_add_test_case functional_pkgsrc_after_bootstrap
     atf_add_test_case build_workflow
     atf_add_test_case auto_workflow
+    atf_add_test_case auto_workflow_reusing_sandbox
 }

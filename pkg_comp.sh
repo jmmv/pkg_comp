@@ -447,14 +447,24 @@ pkg_comp_auto() {
     local packages
     packages="$(expand_packages "${@}")" || exit
 
-    cleanup() {
-        shtk_cli_info "Destroying sandbox"
-        run_sandboxctl destroy
-    }
-    shtk_cleanup_register cleanup
+    local root
+    root="$(run_sandboxctl config SANDBOX_ROOT)" || exit
 
-    shtk_cli_info "Creating sandbox"
-    run_sandboxctl create || exit
+    if [ -d "${root}/pkg_comp" ]; then
+        shtk_cli_warning "Reusing existing sandbox; if this is not what you" \
+            "want to do, abort now with Ctrl-C and use sandbox-delete to" \
+            "wipe the previous sandbox"
+    else
+        cleanup() {
+            shtk_cli_info "Destroying sandbox"
+            run_sandboxctl destroy
+        }
+        shtk_cleanup_register cleanup
+
+        shtk_cli_info "Creating sandbox"
+        run_sandboxctl create || exit
+    fi
+
     pkg_comp_build ${packages} || exit
 }
 
