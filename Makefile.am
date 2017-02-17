@@ -91,7 +91,8 @@ sandbox.conf: $(srcdir)/sandbox.conf.in
 dist_pkgdata_DATA = sandbox.conf.pre sandbox.conf.post
 
 shtk_modulesdir = $(SHTK_MODULESDIR)
-dist_shtk_modules_DATA = pkg_comp_git.subr
+dist_shtk_modules_DATA  = pkg_comp_git.subr
+dist_shtk_modules_DATA += pkg_comp_pkgsrc.subr
 
 if WITH_ATF
 dist_pkgtests_DATA = Kyuafile
@@ -102,6 +103,14 @@ EXTRA_DIST += pkg_comp_git_test.sh
 pkg_comp_git_test: $(srcdir)/pkg_comp_git_test.sh
 	$(AM_V_GEN)source="$(srcdir)/pkg_comp_git_test.sh" \
 	target=pkg_comp_git_test; \
+	$(BUILD_TEST)
+
+pkgtests_SCRIPTS += pkg_comp_pkgsrc_test
+CLEANFILES += pkg_comp_pkgsrc_test
+EXTRA_DIST += pkg_comp_pkgsrc_test.sh
+pkg_comp_pkgsrc_test: $(srcdir)/pkg_comp_pkgsrc_test.sh
+	$(AM_V_GEN)source="$(srcdir)/pkg_comp_pkgsrc_test.sh" \
+	target=pkg_comp_pkgsrc_test; \
 	$(BUILD_TEST)
 
 pkgtests_SCRIPTS += pkg_comp_test

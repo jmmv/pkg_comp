@@ -35,6 +35,7 @@ shtk_import config
 shtk_import cvs
 shtk_import hw
 shtk_import pkg_comp_git
+shtk_import pkg_comp_pkgsrc
 
 
 # List of valid configuration variables.
@@ -380,35 +381,6 @@ EOF
 }
 
 
-# Validates package names and resolves those that don't specify categories.
-#
-# Given a list of words of the form "category/pkgname" or "pkgname", ensures
-# that those packages exist and prints the name of all valid packages.  For
-# words of the form "pkgname", the output will be the corresponding
-# "category/pkgname" for the entry.
-#
-# \param ... Package names to expand.
-expand_packages() {
-    local failed=no
-    local pkgsrcdir="$(shtk_config_get PKGSRCDIR)"
-    for package in "${@}"; do
-        local candidate
-        case "${package}" in
-            */*) candidate="${package}" ;;
-            *) candidate="$(cd "${pkgsrcdir}" && echo */${package})" ;;
-        esac
-        if [ ! -d "${pkgsrcdir}/${candidate}" ]; then
-            shtk_cli_warning "Package ${package} does not exist"
-            failed=yes
-        else
-            echo "${candidate}"
-        fi
-    done
-    [ "${failed}" = no ] || shtk_cli_error "Some packages do not exist in" \
-        "pkgsrc; please fix and retry"
-}
-
-
 # Automatic mode.
 #
 # Updates the pkgsrc tree, creates a sandbox, bootstraps pkgsrc, builds a set of
@@ -445,7 +417,9 @@ pkg_comp_auto() {
     # We must validate packages after invoking pkg_comp_fetch to ensure the
     # pkgsrc tree exists.
     local packages
-    packages="$(expand_packages "${@}")" || exit
+    packages="$(pkgsrc_expand_packages "$(shtk_config_get PKGSRCDIR)" "${@}")" \
+        || shtk_cli_error "Some packages do not exist in pkgsrc; please fix" \
+            "and retry"
 
     local root
     root="$(run_sandboxctl config SANDBOX_ROOT)" || exit
@@ -494,7 +468,9 @@ pkg_comp_build() {
         || shtk_cli_usage_error "build requires at least one package name"
 
     local packages
-    packages="$(expand_packages "${@}")" || exit
+    packages="$(pkgsrc_expand_packages "$(shtk_config_get PKGSRCDIR)" "${@}")" \
+        || shtk_cli_error "Some packages do not exist in pkgsrc; please fix" \
+            "and retry"
 
     pkg_comp_bootstrap || exit
 
