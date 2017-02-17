@@ -101,7 +101,7 @@ pkgtests_SCRIPTS = pkg_comp_git_test
 CLEANFILES += pkg_comp_git_test
 EXTRA_DIST += pkg_comp_git_test.sh
 pkg_comp_git_test: $(srcdir)/pkg_comp_git_test.sh
-	$(AM_V_GEN)source="$(srcdir)/pkg_comp_git_test.sh" \
+	$(AM_V_GEN)source="pkg_comp_git_test.sh" \
 	target=pkg_comp_git_test; \
 	$(BUILD_TEST)
 
@@ -109,7 +109,7 @@ pkgtests_SCRIPTS += pkg_comp_pkgsrc_test
 CLEANFILES += pkg_comp_pkgsrc_test
 EXTRA_DIST += pkg_comp_pkgsrc_test.sh
 pkg_comp_pkgsrc_test: $(srcdir)/pkg_comp_pkgsrc_test.sh
-	$(AM_V_GEN)source="$(srcdir)/pkg_comp_pkgsrc_test.sh" \
+	$(AM_V_GEN)source="pkg_comp_pkgsrc_test.sh" \
 	target=pkg_comp_pkgsrc_test; \
 	$(BUILD_TEST)
 
