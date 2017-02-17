@@ -33,10 +33,10 @@ shtk_import unittest
 shtk_unittest_add_fixture expand_packages
 expand_packages_fixture() {
     setup() {
-        mkdir -p pkgsrc/first/pkg-a
-        mkdir -p pkgsrc/second/pkg-b
-        mkdir -p pkgsrc/third/pkg-c
-        mkdir -p pkgsrc/fourth/pkg-d
+        for pkg in first/pkg-a second/pkg-b third/pkg-c fourth/pkg-d; do
+            mkdir -p "pkgsrc/${pkg}"
+            touch "pkgsrc/${pkg}/Makefile"
+        done
     }
 
 
@@ -81,5 +81,18 @@ expand_packages_fixture() {
             -e match:"W: Package pkg-e does not exist" \
             pkgsrc_expand_packages pkgsrc \
             first pkg-b second/pkg-a fourth/pkg-d pkg-e
+    }
+
+
+    shtk_unittest_add_test conflicting_names_in_distfiles
+    conflicting_names_in_distfiles_test() {
+        mkdir -p pkgsrc/distfiles/pkg-z
+        mkdir -p pkgsrc/zzz/pkg-z
+        touch pkgsrc/zzz/pkg-z/Makefile
+
+        assert_command \
+            -o match:zzz/pkg-z \
+            -o not-match:distfiles \
+            pkgsrc_expand_packages pkgsrc pkg-z
     }
 }

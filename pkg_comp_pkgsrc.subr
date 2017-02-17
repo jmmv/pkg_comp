@@ -52,9 +52,10 @@ pkgsrc_expand_packages() {
         local candidate
         case "${package}" in
             */*) candidate="${package}" ;;
-            *) candidate="$(cd "${pkgsrcdir}" && echo */${package})" ;;
+            *) candidate="$(cd "${pkgsrcdir}" \
+                && echo */"${package}/Makefile" | cut -d / -f -2)" ;;
         esac
-        if [ ! -d "${pkgsrcdir}/${candidate}" ]; then
+        if [ ! -e "${pkgsrcdir}/${candidate}/Makefile" ]; then
             shtk_cli_warning "Package ${package} does not exist"
             failed=yes
         else
