@@ -28,7 +28,8 @@ that should be the only necessary dependency.
 
 **Download and run the
 [pkg_comp-2.0-20170223-macos.pkg](../../releases/download/pkg_comp-2.0/pkg_comp-2.0-20170223-macos.pkg)
-installer.**
+installer.**  As a prerequisite on macOS, you will also have to **[download
+and install OSXFUSE 3](https://osxfuse.github.io/).**
 
 **Read
 [Easy pkgsrc on macOS with pkg_comp 2.0](http://julio.meroh.net/2017/02/pkg_comp-2.0-tutorial-macos.html)
