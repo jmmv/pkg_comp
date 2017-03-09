@@ -138,10 +138,21 @@ main() {
         || err "Failed to create temporary directory"
     trap "rm -rf '${tempdir}'" EXIT
 
+    PATH="${prefix}/bin:${prefix}/sbin:${PATH}"
+    export PKG_CONFIG_PATH="${prefix}/lib/pkgconfig"
+
+    if ! which pkg-config >/dev/null >/dev/null || ! which pkgconf >/dev/null
+    then
+        download \
+            https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.0.tar.gz \
+            "${tempdir}/pkgconf-1.3.0.tar.gz"
+    fi
+
     case "$(uname -s)" in
         Darwin)
             download "http://bindfs.org/downloads/bindfs-1.13.6.tar.gz" \
                 "${tempdir}/bindfs-1.13.6.tar.gz" || exit 1
+            PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/local/lib/pkgconfig"
             ;;
     esac
 
@@ -151,14 +162,10 @@ main() {
             "${tempdir}/${pkg}.tar.gz" || exit 1
     done
 
-    PATH="${prefix}/bin:${prefix}/sbin:${PATH}"
-    if [ -z "${PKG_CONFIG_PATH}" ]; then
-        PKG_CONFIG_PATH="${prefix}/lib/pkgconfig"
-    else
-        PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    if [ -e "${tempdir}/pkgconf-1.3.0.tar.gz" ]; then
+        build "${tempdir}" pkgconf-1.3.0 --prefix="${tempdir}/tools" || exit 1
+        export PKG_CONFIG="${tempdir}/tools/bin/pkgconf"
     fi
-    export PKG_CONFIG_PATH
-
     if [ -e "${tempdir}/bindfs-1.13.6.tar.gz" ]; then
         build "${tempdir}" bindfs-1.13.6 --prefix="${prefix}" || exit 1
     fi
