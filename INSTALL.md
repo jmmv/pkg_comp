@@ -1,5 +1,75 @@
-Introduction
-============
+# Installation instructions
+
+Getting pkg_comp up and running is easy, and the process does not require a
+pre-existing pkgsrc installation.  This is intentional given that pkg_comp
+is intended to simplify interactions with pkgsrc, so cyclic dependencies would
+be suboptimal.
+
+You can choose to use an installer package, the installer script, source or
+binary packages for your operating system, or to build from source.
+
+## Using the generic installer
+
+**Run:**
+
+    curl -L https://raw.githubusercontent.com/jmmv/pkg_comp/master/admin/bootstrap.sh | /bin/sh /dev/stdin
+
+This will fetch and run a script that downloads pkg_comp and its dependencies as
+source packages, builds all of them, and installs the results under the
+`/usr/local/` prefix.  The resulting installation is barebones: i.e. the
+packages are installed exactly as distributed by the upstream distribution
+files.  No post-install configuration is executed, which means you will have to
+set everything up by yourself; see `pkg_comp(8)` to get started.
+
+You will need the `pkg-config` tool on your system for this to work, but
+that should be the only necessary dependency.
+
+## Using the macOS installer
+
+**Download and run the
+[pkg_comp-2.0-20170223-macos.pkg](../../releases/download/pkg_comp-2.0/pkg_comp-2.0-20170223-macos.pkg)
+installer.**  As a prerequisite on macOS, you will also have to **[download
+and install OSXFUSE 3](https://osxfuse.github.io/).**
+
+**Read
+[Easy pkgsrc on macOS with pkg_comp 2.0](http://julio.meroh.net/2017/02/pkg_comp-2.0-tutorial-macos.html)
+for a tutorial on this package.**
+
+This is a highly-customized installation of pkg_comp intended to simplify the
+use of pkgsrc on this platform.  Because of this, the installer is very
+prescriptive about the configuration and the location of the installed files.
+In particular, the package will:
+
+*   Install pkg_comp as `/usr/local/sbin/pkg_comp`.
+*   Place configuration files under `/usr/local/etc/pkg_comp/`.
+*   Create `/var/pkg_comp/` to host the pkgsrc tree and the built packages.
+*   Default the installation of the built packages to `/opt/pkg`.
+*   Configure a daily cron job, as root, to build a fresh set of packages.
+
+All you need to do to get started is modify
+`/usr/local/etc/pkg_comp/list.txt` to indicate which packages you would
+like built and they will eventually show up under
+`/var/pkg_comp/packages/All/`.
+
+You can use `/usr/local/libexec/pkg_comp/uninstall.sh` to undo the actions
+performed by this package.  The contents of `/var/pkg_comp/` will be left
+behind.  Feel free to destroy that directory if you do not need any of the
+packages you previously built nor the pkgsrc tree.
+
+## Using operating-system packages
+
+The following packages are known to exist:
+
+*   **pkgsrc** (for NetBSD): `pkgtools/pkg_comp` and `pkgtools/pkg_comp-cron`.
+    *   **Read
+        [Keeping NetBSD up-to-date with pkg_comp 2.0](http://julio.meroh.net/2017/02/pkg_comp-2.0-tutorial-netbsd.html)**
+        for details on how to use the `pkg_comp-cron` package.
+
+## Building from source
+
+Download the
+[pkg_comp-2.0.tar.gz](../../releases/download/pkg_comp-2.0/pkg_comp-2.0.tar.gz)
+distribution file.
 
 pkg_comp uses the GNU Automake and GNU Autoconf utilities as its build
 system.  These are used only when building the package from the source
@@ -25,9 +95,7 @@ Or alternatively, install as a regular user into your home directory:
     $ make install
     $ make installcheck
 
-
-Dependencies
-============
+### Dependencies
 
 To build and use pkg_comp successfully you need:
 
@@ -47,9 +115,7 @@ also need the following tools:
 * GNU Autoconf.
 * GNU Automake.
 
-
-Regenerating the build system
-=============================
+### Regenerating the build system
 
 This is not necessary if you are building from a formal release
 distribution file.
@@ -72,9 +138,7 @@ replacing '<atf-prefix>' and '<shtk-prefix>' with the appropriate path:
     $ autoreconf -i -s -I <atf-prefix>/share/aclocal \
       -I <shtk-prefix>/share/aclocal
 
-
-General build procedure
-=======================
+### General build procedure
 
 To build and install the source package, you must follow these steps:
 
@@ -97,9 +161,7 @@ To build and install the source package, you must follow these steps:
 5. Check that the installed library works by running 'make
    installcheck'.  You do not need to be root to do this.
 
-
-Configuration flags
-===================
+### Configuration flags
 
 The most common, standard flags given to 'configure' are:
 
@@ -152,9 +214,7 @@ The following flags are specific to pkg_comp's 'configure' script:
   directory will cause these tests to be run with Kyua (assuming it is
   also installed).
 
-
-Run the tests!
-==============
+### Run the tests!
 
 Lastly, after a successful installation (and assuming you built the
 sources with support for ATF), you should periodically run the tests
