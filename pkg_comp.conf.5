@@ -245,6 +245,10 @@ In other words, they are run under a shell configured with
 .Pp
 The following hooks can be defined:
 .Bl -tag -width post_build_hookXX
+.It Fn post_build_hook
+Function executed right after the set of packages have been built by the
+.Sq build
+command.
 .It Fn post_fetch_hook
 Function executed right after all source trees have been updated by the
 .Sq fetch

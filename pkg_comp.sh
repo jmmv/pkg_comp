@@ -78,6 +78,7 @@ pkg_comp_set_defaults() {
     shtk_config_set UPDATE_SOURCES "true"
     shtk_config_set VARBASE "/var"
 
+    post_build_hook() { true; }
     post_fetch_hook() { true; }
 }
 
@@ -500,6 +501,8 @@ pkg_comp_build() {
     run_sandboxctl run /pkg_comp/pbulk/bin/bulkbuild || \
         shtk_cli_error "bulkbuild failed; see ${root}/pkg_comp/work/bulklog/" \
             "for possible details"
+
+    shtk_config_run_hook post_build_hook
 }
 
 
