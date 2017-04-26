@@ -34,8 +34,9 @@ shtk_import cli
 shtk_import config
 shtk_import cvs
 shtk_import hw
-shtk_import pkg_comp_git
-shtk_import pkg_comp_pkgsrc
+: ${PKG_COMP_SHTK_MODULESDIR:="__PKG_COMP_SHTK_MODULESDIR__"}
+SHTK_MODULESPATH="${PKG_COMP_SHTK_MODULESDIR}" shtk_import git
+SHTK_MODULESPATH="${PKG_COMP_SHTK_MODULESDIR}" shtk_import pkgsrc
 
 
 # List of valid configuration variables.
@@ -554,7 +555,7 @@ pkg_comp_fetch() {
             ;;
 
         git)
-            pkg_comp_git_fetch "$(shtk_config_get GIT_URL)" \
+            git_fetch "$(shtk_config_get GIT_URL)" \
                 "$(shtk_config_get GIT_BRANCH)" \
                 "$(shtk_config_get PKGSRCDIR)"
             ;;

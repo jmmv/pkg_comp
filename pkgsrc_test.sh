@@ -26,8 +26,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-shtk_import pkg_comp_pkgsrc
 shtk_import unittest
+: ${PKG_COMP_SHTK_MODULESDIR:="__PKG_COMP_SHTK_MODULESDIR__"}
+SHTK_MODULESPATH="${PKG_COMP_SHTK_MODULESDIR}" shtk_import pkgsrc
 
 
 shtk_unittest_add_fixture expand_packages

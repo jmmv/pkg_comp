@@ -26,8 +26,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-shtk_import pkg_comp_git
 shtk_import unittest
+: ${PKG_COMP_SHTK_MODULESDIR:="__PKG_COMP_SHTK_MODULESDIR__"}
+SHTK_MODULESPATH="${PKG_COMP_SHTK_MODULESDIR}" shtk_import git
 
 
 # Creates a local Git repository with some files.
@@ -85,7 +86,7 @@ fetch_fixture() {
     shtk_unittest_add_test ok
     ok_test() {
         expect_command -o ignore -e ignore \
-            pkg_comp_git_fetch "${REPOSITORY_URL}" trunk clone1
+            git_fetch "${REPOSITORY_URL}" trunk clone1
         grep "first revision" clone1/the-file >/dev/null \
             || fail "Unexpected version found"
 
@@ -97,7 +98,7 @@ fetch_fixture() {
         grep "first revision" clone1/the-file >/dev/null \
             || fail "Unexpected version found"
         expect_command -o ignore -e ignore \
-            pkg_comp_git_fetch "${REPOSITORY_URL}" trunk clone1
+            git_fetch "${REPOSITORY_URL}" trunk clone1
         grep "second revision" clone1/the-file >/dev/null \
             || fail "Unexpected version found"
     }
@@ -121,7 +122,7 @@ checkout_fixture() {
     ok_test() {
         init_git_repository "${REPOSITORY_DIR}" trunk
         expect_command -o ignore -e ignore \
-            pkg_comp_git_clone "${REPOSITORY_URL}" trunk clone
+            git_clone "${REPOSITORY_URL}" trunk clone
         grep "first revision" clone/the-file >/dev/null \
             || fail "Unexpected version found"
     }
@@ -132,7 +133,7 @@ checkout_fixture() {
         mkdir -p missing-dir
         expect_command -s exit:1 \
             -e match:"Cannot clone into .*missing-dir.* exists" \
-            pkg_comp_git_clone "${REPOSITORY_URL}" trunk missing-dir
+            git_clone "${REPOSITORY_URL}" trunk missing-dir
     }
 
 
@@ -140,7 +141,7 @@ checkout_fixture() {
     git_fails_test() {
         init_git_repository "${REPOSITORY_DIR}" trunk
         expect_command -s exit:1 -e match:"Git clone failed" \
-            pkg_comp_git_clone "${REPOSITORY_URL}" non-existent dir
+            git_clone "${REPOSITORY_URL}" non-existent dir
         [ ! -e dir ] || fail "Clone directory created and left behind"
     }
 }
@@ -169,7 +170,7 @@ update_fixture() {
             git clone -b trunk "${REPOSITORY_URL}" copy
 
         expect_command -o ignore -e ignore \
-            pkg_comp_git_update "${REPOSITORY_URL}" trunk first
+            git_update "${REPOSITORY_URL}" trunk first
         grep "first revision" first/the-file >/dev/null \
             || fail "Unexpected version found"
 
@@ -177,7 +178,7 @@ update_fixture() {
         commit_and_push copy
 
         expect_command -o ignore -e ignore \
-            pkg_comp_git_update "${REPOSITORY_URL}" trunk first
+            git_update "${REPOSITORY_URL}" trunk first
         grep "second revision" first/the-file >/dev/null \
             || fail "Unexpected version found"
     }
@@ -207,7 +208,7 @@ update_fixture() {
         sed s,^2$,20, first/the-file >first/the-file.new
         mv first/the-file.new first/the-file
         expect_command -o ignore -e ignore \
-            pkg_comp_git_update "${REPOSITORY_URL}" trunk first
+            git_update "${REPOSITORY_URL}" trunk first
 
         # Sanity-check that our edits remain.
         cat >expout <<EOF
@@ -260,7 +261,7 @@ EOF
         sed s,^8$,80, first/the-file >first/the-file.new
         mv first/the-file.new first/the-file
         expect_command -s exit:1 -o ignore -e ignore \
-            pkg_comp_git_update "${REPOSITORY_URL}" trunk first
+            git_update "${REPOSITORY_URL}" trunk first
 
         # Check that the file is left behind with conflict markers.
         grep '<<<<' first/the-file || fail "No conflict markers found"
@@ -286,7 +287,7 @@ EOF
         grep "first revision" first/the-file >/dev/null \
             || fail "Unexpected version found"
         expect_command -o ignore -e ignore \
-            pkg_comp_git_update "${REPOSITORY_URL}" other-trunk first
+            git_update "${REPOSITORY_URL}" other-trunk first
         grep "alternate revision" first/the-file >/dev/null \
             || fail "Unexpected version found"
     }
@@ -295,7 +296,7 @@ EOF
     shtk_unittest_add_test does_not_exist
     does_not_exist_test() {
         expect_command -s exit:1 -e match:"Cannot update src; .*not exist" \
-            pkg_comp_git_update "${REPOSITORY_URL}" trunk src
+            git_update "${REPOSITORY_URL}" trunk src
     }
 
 
@@ -305,6 +306,6 @@ EOF
         assert_command -o ignore -e ignore \
             git clone -b trunk "${REPOSITORY_URL}" work
         expect_command -s exit:1 -e match:"Git fetch failed" \
-            pkg_comp_git_update "${REPOSITORY_URL}" bad-branch work
+            git_update "${REPOSITORY_URL}" bad-branch work
     }
 }

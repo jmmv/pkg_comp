@@ -39,6 +39,7 @@ BUILD_SED = \
 	    -e 's,__PKG_COMP_DOCDIR__,$(docdir),g' \
 	    -e 's,__PKG_COMP_ETCDIR__,$(pkg_comp_confdir),g' \
 	    -e 's,__PKG_COMP_SHAREDIR__,$(pkgdatadir),g' \
+	    -e 's,__PKG_COMP_SHTK_MODULESDIR__,$(pkgdatadir)/shtk,g' \
 	    -e 's,__SANDBOXCTL__,$(SANDBOXCTL),g'
 BUILD_SCRIPT = \
 	$(BUILD_SED) <"$(srcdir)/$${source}" | \
@@ -90,27 +91,25 @@ sandbox.conf: $(srcdir)/sandbox.conf.in
 
 dist_pkgdata_DATA = sandbox.conf.pre sandbox.conf.post
 
-shtk_modulesdir = $(SHTK_MODULESDIR)
-dist_shtk_modules_DATA  = pkg_comp_git.subr
-dist_shtk_modules_DATA += pkg_comp_pkgsrc.subr
+shtk_modulesdir = $(pkgdatadir)/shtk
+dist_shtk_modules_DATA  = git.subr
+dist_shtk_modules_DATA += pkgsrc.subr
 
 if WITH_ATF
 dist_pkgtests_DATA = Kyuafile
 
-pkgtests_SCRIPTS = pkg_comp_git_test
-CLEANFILES += pkg_comp_git_test
-EXTRA_DIST += pkg_comp_git_test.sh
-pkg_comp_git_test: $(srcdir)/pkg_comp_git_test.sh
-	$(AM_V_GEN)source="pkg_comp_git_test.sh" \
-	target=pkg_comp_git_test; \
+pkgtests_SCRIPTS = git_test
+CLEANFILES += git_test
+EXTRA_DIST += git_test.sh
+git_test: $(srcdir)/git_test.sh
+	$(AM_V_GEN)source="git_test.sh" target=git_test; \
 	$(BUILD_TEST)
 
-pkgtests_SCRIPTS += pkg_comp_pkgsrc_test
-CLEANFILES += pkg_comp_pkgsrc_test
-EXTRA_DIST += pkg_comp_pkgsrc_test.sh
-pkg_comp_pkgsrc_test: $(srcdir)/pkg_comp_pkgsrc_test.sh
-	$(AM_V_GEN)source="pkg_comp_pkgsrc_test.sh" \
-	target=pkg_comp_pkgsrc_test; \
+pkgtests_SCRIPTS += pkgsrc_test
+CLEANFILES += pkgsrc_test
+EXTRA_DIST += pkgsrc_test.sh
+pkgsrc_test: $(srcdir)/pkgsrc_test.sh
+	$(AM_V_GEN)source="pkgsrc_test.sh" target=pkgsrc_test; \
 	$(BUILD_TEST)
 
 pkgtests_SCRIPTS += pkg_comp_test
@@ -138,7 +137,7 @@ if HAVE_KYUA
 CHECK_ENVIRONMENT  = PATH=$(abs_top_builddir):$${PATH}
 CHECK_ENVIRONMENT += PKG_COMP_ETCDIR=$(abs_top_srcdir)
 CHECK_ENVIRONMENT += PKG_COMP_SHAREDIR=$(abs_top_srcdir)
-CHECK_ENVIRONMENT += SHTK_MODULESPATH=$(abs_top_srcdir):$${SHTK_MODULESPATH}
+CHECK_ENVIRONMENT += PKG_COMP_SHTK_MODULESDIR=$(abs_top_srcdir)
 INSTALLCHECK_ENVIRONMENT = PATH=$(prefix)/sbin:$${PATH}
 
 check-local: check-kyua
