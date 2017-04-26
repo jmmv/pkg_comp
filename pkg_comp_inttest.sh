@@ -192,6 +192,21 @@ check_not_files() {
 }
 
 
+# Ensures that a given package name appears in the pkg_summary files.
+#
+# \param dir Path to the directory containing the pkg_summary files.
+# \param pkgname Basename of the package to search for.
+check_pkg_summary() {
+    local dir="${1}"; shift
+    local pkgname="${1}"; shift
+
+    gunzip -c "${dir}/pkg_summary.gz" | grep "PKGNAME=${pkgname}-[0-9]" \
+        || atf_fail "pkg_summary.gz does not contain ${pkgname}"
+    bunzip2 -c "${dir}/pkg_summary.bz2" | grep "PKGNAME=${pkgname}-[0-9]" \
+        || atf_fail "pkg_summary.bz2 does not contain ${pkgname}"
+}
+
+
 integration_test_case bootstrap_workflow
 bootstrap_workflow_intbody() {
     atf_check -e ignore pkg_comp -c pkg_comp.conf sandbox-create
@@ -337,6 +352,8 @@ build_workflow_intbody() {
         pkg_comp -c pkg_comp.conf build sysbuild
     check_files packages/pkg/All/shtk-[0-9]*
     check_files packages/pkg/All/sysbuild-[0-9]*
+    check_pkg_summary packages/pkg/All shtk
+    check_pkg_summary packages/pkg/All sysbuild
 
     # pbulk installs only intermediate dependencies but does not install the
     # final package we asked, so install it now to ensure things work.
@@ -353,6 +370,23 @@ build_workflow_intbody() {
     atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf build sysbuild
     check_files packages/pkg/All/shtk-[0-9]*
     check_files packages/pkg/All/sysbuild-[0-9]*
+    check_pkg_summary packages/pkg/All shtk
+    check_pkg_summary packages/pkg/All sysbuild
+
+    # Delete an intermediate package and ensure that building it alone does
+    # not cause other binary packages to be discarded.
+    rm packages/pkg/All/shtk-*
+    check_not_files packages/pkg/All/shtk-[0-9]*
+    atf_check \
+        -o match:'Starting build of .*shtk-[0-9]' \
+        -o match:'Successfully built .*shtk-[0-9]' \
+        -o not-match:'Starting build of .*sysbuild-[0-9]' \
+        -e ignore \
+        pkg_comp -c pkg_comp.conf build shtk
+    check_files packages/pkg/All/shtk-[0-9]*
+    check_files packages/pkg/All/sysbuild-[0-9]*  # Has to be there!
+    check_pkg_summary packages/pkg/All shtk
+    check_pkg_summary packages/pkg/All sysbuild  # Has to be there!
 
     atf_check -e ignore pkg_comp -c pkg_comp.conf sandbox-destroy
     save_state
@@ -419,10 +453,12 @@ EOF
     check_files packages/pkg/All/shtk-[0-9]*
     check_files packages/pkg/All/sysbuild-[0-9]*
     check_not_files cvs.done sandbox
+    check_pkg_summary packages/pkg/All shtk
+    check_pkg_summary packages/pkg/All sysbuild
 
     # Now pass the packages to build on the command line.  As the sandbox has
     # been recreated, we should not see the packages we asked earlier being
-    # built.
+    # built, but they should remain.
     atf_check \
         -o not-match:'Starting build of .*atf-[0-9]' \
         -o match:'Starting build of .*shtk-[0-9]' \
@@ -434,7 +470,9 @@ EOF
         -e match:'pkg_comp: I: Destroying sandbox' \
         pkg_comp -c pkg_comp.conf auto -f shtk
     check_files packages/pkg/All/shtk-[0-9]*
-    check_files packages/pkg/All/sysbuild-[0-9]*
+    check_files packages/pkg/All/sysbuild-[0-9]*  # Has to be there!
+    check_pkg_summary packages/pkg/All shtk
+    check_pkg_summary packages/pkg/All sysbuild  # Has to be there!
     check_not_files cvs.done sandbox
 
     # Check cvs operations in non-fast mode.

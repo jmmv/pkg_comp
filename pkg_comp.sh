@@ -361,6 +361,7 @@ EOF
         fi
     }
 
+    pbulk_set checksum_packages no
     pbulk_set mail true
     pbulk_set master_mode no
     pbulk_set rsync true
@@ -378,6 +379,33 @@ EOF
     pbulk_set pkgsrc /pkg_comp/pkgsrc
     pbulk_set prefix "$(shtk_config_get LOCALBASE)"
     pbulk_set varbase "$(shtk_config_get VARBASE)"
+}
+
+
+# Generates pkg_summary for all built packages.
+#
+# pbulk does this on its own, but it only adds the packages that have just been
+# built to pkg_summary.  For pkg_comp, because we want to support the case where
+# users request individual additional packages to be built, we have to
+# regenerate pkg_summary using *all* existing binary packages and not only those
+# that were handled by pbulk.
+#
+# \param root Path to the root of the sandbox.
+generate_pkg_summary() {
+    local root="${1}"; shift
+
+    shtk_cli_info "Generating pkg_summary"
+    # We need to run this within the sandbox because we have to execute pbulk's
+    # copy of pkg_info.
+    cat >"${root}/tmp/pkg_summary.sh" <<EOF
+#! /bin/sh
+cd /pkg_comp/packages/pkg/All
+rm -f pkg_summary.*
+ls -1 *.tgz | xargs /pkg_comp/pbulk/sbin/pkg_info -X | gzip -c >pkg_summary.gz
+gzip -dc <pkg_summary.gz | bzip2 -c >pkg_summary.bz2
+EOF
+    chmod +x "${root}/tmp/pkg_summary.sh"
+    run_sandboxctl run /tmp/pkg_summary.sh
 }
 
 
@@ -477,21 +505,12 @@ pkg_comp_build() {
     local root
     root="$(run_sandboxctl config SANDBOX_ROOT)" || exit
 
-    # Add new packages to be built to limited list.  We must preserve the
-    # previous contents of the list or pbulk would delete any existing but
-    # non-built packages.
-    shtk_cli_info "Adding packages to be built to (existent) pbulk.list"
+    shtk_cli_info "Adding packages to be built to pbulk.list"
     local list="${root}/pkg_comp/pbulk/etc/pbulk.list"
-    if [ -f "${list}" ]; then
-        cp "${list}" "${list}.new"
-    else
-        rm -f "${list}.new"
-    fi
+    rm -f "${list}"
     for package in ${packages}; do
-        echo "${package}" >>"${list}.new"
+        echo "${package}" >>"${list}"
     done
-    sort "${list}.new" | uniq >"${list}"
-    rm -f "${list}.new"
 
     # Removing bulklog/success seems to be necessary to restart a build, as
     # otherwise bulkbuild does not build modified packages.  Is this correct?
@@ -500,6 +519,7 @@ pkg_comp_build() {
     run_sandboxctl run /pkg_comp/pbulk/bin/bulkbuild || \
         shtk_cli_error "bulkbuild failed; see ${root}/pkg_comp/work/bulklog/" \
             "for possible details"
+    generate_pkg_summary "${root}"
 }
 
 

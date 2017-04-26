@@ -3,7 +3,9 @@ Changes in version 2.1
 
 **STILL UNDER DEVELOPMENT; NOT RELEASED YET.**
 
-* No changes recorded.
+* Issue 10: Fixed generation of pkg_summary so that it includes all
+  packages and not only those that were explicitly given to the `auto`
+  or `build` commands after a clean rebuild of the sandbox.
 
 
 Changes in version 2.0
