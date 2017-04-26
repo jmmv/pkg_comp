@@ -40,6 +40,13 @@ init_git_repository() {
     local dir="${1}"; shift
     local branch="${1}"; shift
 
+    # Git can, in theory, automatically set some default values for these.
+    # Unfortunately, such autoconfiguration can fail if e.g. the domain name
+    # for the machine is missing.  Be explicit.
+    assert_command -o ignore -e ignore git config --global user.email \
+        test@example.com
+    assert_command -o ignore -e ignore git config --global user.name Test
+
     assert_command -o ignore -e ignore git init --bare "${dir}"
 
     mkdir work
