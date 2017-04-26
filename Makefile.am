@@ -140,18 +140,24 @@ CHECK_ENVIRONMENT += PKG_COMP_SHAREDIR=$(abs_top_srcdir)
 CHECK_ENVIRONMENT += PKG_COMP_SHTK_MODULESDIR=$(abs_top_srcdir)
 INSTALLCHECK_ENVIRONMENT = PATH=$(prefix)/sbin:$${PATH}
 
+# Allow the caller to override the configuration file passed to our test runs
+# below (or any other argument for that matter).
+KYUA_FLAGS ?=
+
 check-local: check-kyua
 PHONY_TARGETS += check-kyua
 check-kyua:
 	$(CHECK_ENVIRONMENT) $(TESTS_ENVIRONMENT) \
-	    $(KYUA) test \
-	    --kyuafile='$(top_srcdir)/Kyuafile' --build-root='$(top_builddir)'
+	    $(KYUA) $(KYUA_FLAGS) test \
+	    --kyuafile="$$(cd '$(top_srcdir)' && echo "$$(pwd -P)/Kyuafile")" \
+	    --build-root='$(top_builddir)' \
+	    || { cd '$(top_srcdir)'; $(KYUA) report --verbose; false; }
 
 installcheck-local: installcheck-kyua
 PHONY_TARGETS += installcheck-kyua
 installcheck-kyua:
 	cd $(pkgtestsdir) && $(INSTALLCHECK_ENVIRONMENT) $(TESTS_ENVIRONMENT) \
-	    $(KYUA) test
+	    $(KYUA) $(KYUA_FLAGS) test
 else  # HAVE_KYUA
 PHONY_TARGETS += missing-kyua
 missing-kyua:
