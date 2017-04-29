@@ -5,10 +5,11 @@ before_install:
     - ./admin/travis-install-deps.sh
 
 env:
-    - SHELL_NAME=bash
-    - SHELL_NAME=dash
-    - SHELL_NAME=pdksh
-    - SHELL_NAME=zsh
+    - AS_ROOT=no SHELL_NAME=bash
+    - AS_ROOT=no SHELL_NAME=dash
+    - AS_ROOT=no SHELL_NAME=pdksh
+    - AS_ROOT=no SHELL_NAME=zsh
+    - AS_ROOT=yes SHELL_NAME=dash
 
 script:
     - ./admin/travis-build.sh

@@ -52,7 +52,7 @@
 #         are doing.  Read-write.
 #
 #     test_suites.pkg_comp.pkgsrcdir
-#         Path to an already checked-out pkgsrc tree.  Read-only.
+#         Path to an pkgsrc tree cloned from Git.  Read-only.
 #
 #     test_suites.pkg_comp.sandbox_conffile
 #         Path to a sandboxctl(8) configuration file to create a clean sandbox
@@ -68,7 +68,8 @@
 
 integration_test_case() {
     atf_test_case "${1}" cleanup
-    eval "${1}_head() { integration_head; }"
+    eval "${1}_inthead() { true; }"
+    eval "${1}_head() { integration_head; ${1}_inthead; }"
     eval "${1}_body() { integration_body; ${1}_intbody; }"
     eval "${1}_cleanup() { integration_cleanup; }"
 }
@@ -102,6 +103,20 @@ integration_cleanup() {
     if [ -d sandbox ]; then
         pkg_comp -c pkg_comp.conf sandbox-unmount -f -f || true
         pkg_comp -c pkg_comp.conf sandbox-destroy || true
+    fi
+}
+
+
+# Configures the test to use Git to pull from pkgsrcgit.
+setup_fetch_from_local_git() {
+    [ -d "$(atf_config_get pkgsrcdir)" ] || atf_skip "pkgsrcdir does not" \
+        "point to a Git repository"
+
+    echo "PKGSRCDIR='$(pwd)/pkgsrc'" >>pkg_comp.conf
+    # Prefer git for a faster test.
+    if which git >/dev/null 2>&1; then
+        echo "FETCH_VCS=git" >>pkg_comp.conf
+        echo "GIT_URL='file://$(atf_config_get pkgsrcdir)'" >>pkg_comp.conf
     fi
 }
 
@@ -491,6 +506,52 @@ EOF
 }
 
 
+integration_test_case fetch_workflow
+fetch_workflow_inthead() {
+    atf_set require.progs "git"
+}
+fetch_workflow_intbody() {
+    setup_fetch_from_local_git
+
+    check_not_files pkgsrc/mk/bsd.pkg.mk
+    atf_check \
+        -o ignore \
+        -e match:'pkg_comp: I: Updating pkgsrc tree' \
+        pkg_comp -c pkg_comp.conf fetch
+    check_files pkgsrc/mk/bsd.pkg.mk
+}
+
+
+integration_test_case auto_workflow_with_fetch
+auto_workflow_with_fetch_inthead() {
+    atf_set require.progs "git"
+}
+auto_workflow_with_fetch_intbody() {
+    reuse_bootstrap
+    reuse_packages cwrappers digest pkgconf shtk sysbuild
+
+    setup_fetch_from_local_git
+
+    # Disable tests to make the build below a bit faster, and also to ensure
+    # that the extra mk.conf fragment is picked up.
+    echo "PKG_DEFAULT_OPTIONS=-tests" >extra.mk.conf
+    echo "EXTRA_MKCONF='$(pwd)/extra.mk.conf'" >>pkg_comp.conf
+
+    # Build one package, which will need to fetch the pkgsrc tree.
+    atf_check \
+        -o not-match:'Starting build of .*atf-[0-9]' \
+        -o match:'Starting build of .*shtk-[0-9]' \
+        -o match:'Successfully built .*shtk-[0-9]' \
+        -e match:'pkg_comp: I: Updating pkgsrc tree' \
+        pkg_comp -c pkg_comp.conf auto shtk
+    check_files pkgsrc/mk/bsd.pkg.mk
+    check_files packages/pkg/All/shtk-[0-9]*
+    check_pkg_summary packages/pkg/All shtk
+
+    save_state
+}
+
+
 integration_test_case auto_workflow_reusing_sandbox
 auto_workflow_reusing_sandbox_intbody() {
     reuse_bootstrap
@@ -526,6 +587,8 @@ atf_init_test_cases() {
     atf_add_test_case bootstrap_workflow
     atf_add_test_case functional_pkgsrc_after_bootstrap
     atf_add_test_case build_workflow
+    atf_add_test_case fetch_workflow
     atf_add_test_case auto_workflow
+    atf_add_test_case auto_workflow_with_fetch
     atf_add_test_case auto_workflow_reusing_sandbox
 }

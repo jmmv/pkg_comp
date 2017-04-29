@@ -33,17 +33,31 @@ autoreconf -isv -I/usr/local/share/aclocal
 
 ./configure
 
+base="$(pwd)/base"
+
+git clone https://github.com/jsonn/pkgsrc.git "${base}/pkgsrc"
+
 cat >kyua.conf <<EOF
 syntax(2)
 unprivileged_user = 'travis'
-test_suites.pkg_comp.distdir = '$(pwd)/distfiles'
-test_suites.pkg_comp.packages = '$(pwd)/packages'
-test_suites.pkg_comp.pkgsrcdir = '$(pwd)/pkgsrc'
+test_suites.pkg_comp.distdir = '${base}/distfiles'
+test_suites.pkg_comp.packages = '${base}/packages'
+test_suites.pkg_comp.pkgsrcdir = '${base}/pkgsrc'
+test_suites.pkg_comp.sandbox_conffile = '${base}/sandbox.conf'
 EOF
+
+cat >"${base}/sandbox.conf" <<EOF
+SANDBOX_ROOT="${base}/sandbox"
+SANDBOX_TYPE=linux-native
+EOF
+
 mkdir -p distfiles packages
 
 f=
 f="${f} KYUA_FLAGS='-c $(pwd)/kyua.conf'"
 f="${f} PKG_CONFIG_PATH='/usr/local/lib/pkgconfig'"
-make distcheck DISTCHECK_CONFIGURE_FLAGS="${f}"
-sudo -H PATH="${PATH}" make distcheck DISTCHECK_CONFIGURE_FLAGS="${f}"
+if [ "${AS_ROOT:-no}" = yes ]; then
+    sudo -H PATH="${PATH}" make distcheck DISTCHECK_CONFIGURE_FLAGS="${f}"
+else
+    make distcheck DISTCHECK_CONFIGURE_FLAGS="${f}"
+fi
