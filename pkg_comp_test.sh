@@ -106,6 +106,12 @@ create_mock_cvsroot() {
 create_git_repo_and_branches() {
     local repository="${1}"
 
+    # Git can, in theory, automatically set some default values for these.
+    # Unfortunately, such autoconfiguration can fail if e.g. the domain name
+    # for the machine is missing.  Be explicit.
+    git config --global user.email test@example.com
+    git config --global user.name Test
+
     git init "${repository}"
     cd "${repository}"
 
