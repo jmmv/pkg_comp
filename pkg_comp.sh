@@ -176,11 +176,25 @@ setup_bootstrap() {
         # the user wants to retry without recreating the sandbox from scratch.
         rm -rf "${root}/pkg_comp/work/${basename}/bootstrap"
 
+        local bootstrap_sh=/bin/sh
+        local dash_echo_test="$("${bootstrap_sh}" -c 'echo "\\100"')"
+        if [ "$(uname -s)" != GNUkFreeBSD -a "${dash_echo_test}" = @ ]; then
+            local bash
+            bash="$(which bash)"
+            if [ ${?} -eq 0 ]; then
+                bootstrap_sh="${bash}"
+            else
+                shtk_cli_warning "/bin/sh appears to be dash and bash was not" \
+                    "found; bootstrap will probably fail"
+            fi
+        fi
+
         shtk_cli_info "Setting up bootstrap in ${prefix} from scratch"
         run_sandboxctl run /bin/sh -c \
             "cd /pkg_comp/pkgsrc/bootstrap && env \
                  DISTDIR=/pkg_comp/distfiles \
                  PACKAGES='/pkg_comp/packages/${basename}' \
+                 SH='${bootstrap_sh}' \
                  ./bootstrap \
                  --gzip-binary-kit=/pkg_comp/packages/${basename}/bootstrap.tgz\
                  --make-jobs='$(shtk_config_get NJOBS)' \
