@@ -45,7 +45,8 @@ BUILD_SCRIPT = \
 	$(BUILD_SED) <"$(srcdir)/$${source}" | \
 	    $(SHTK_TOOL) build -o "$${target}" -
 BUILD_FILE = \
-	$(BUILD_SED) <"$(srcdir)/$${source}" >"$${target}.tmp"; \
+	for s in $${sources}; do cat "$(srcdir)/$${s}"; done | \
+	$(BUILD_SED) >"$${target}.tmp"; \
 	mv "$${target}.tmp" "$${target}"
 BUILD_OLD_TEST = \
 	$(BUILD_FILE); \
@@ -70,7 +71,7 @@ man_MANS = pkg_comp.8
 CLEANFILES += pkg_comp.8
 EXTRA_DIST += pkg_comp.8.in
 pkg_comp.8: $(srcdir)/pkg_comp.8.in
-	$(AM_V_GEN)source=pkg_comp.8.in target=pkg_comp.8; $(BUILD_FILE)
+	$(AM_V_GEN)sources=pkg_comp.8.in target=pkg_comp.8; $(BUILD_FILE)
 
 dist_man_MANS  = pkg_comp.conf.5
 dist_man_MANS += pkg_comp4cron.8
@@ -81,13 +82,13 @@ nodist_pkg_comp_conf_DATA = default.conf
 CLEANFILES += default.conf
 EXTRA_DIST += default.conf.in
 default.conf: $(srcdir)/default.conf.in
-	$(AM_V_GEN)source=default.conf.in target=default.conf; $(BUILD_FILE)
+	$(AM_V_GEN)sources=default.conf.in target=default.conf; $(BUILD_FILE)
 
 nodist_pkg_comp_conf_DATA += sandbox.conf
 CLEANFILES += sandbox.conf
 EXTRA_DIST += sandbox.conf.in
 sandbox.conf: $(srcdir)/sandbox.conf.in
-	$(AM_V_GEN)source=sandbox.conf.in target=sandbox.conf; $(BUILD_FILE)
+	$(AM_V_GEN)sources=sandbox.conf.in target=sandbox.conf; $(BUILD_FILE)
 
 dist_pkgdata_DATA = sandbox.conf.pre sandbox.conf.post
 
@@ -116,14 +117,7 @@ pkgtests_SCRIPTS += pkg_comp_test
 CLEANFILES += pkg_comp_test
 EXTRA_DIST += pkg_comp_test.sh
 pkg_comp_test: $(srcdir)/pkg_comp_test.sh
-	$(AM_V_GEN)source=pkg_comp_test.sh target=pkg_comp_test; \
-	$(BUILD_OLD_TEST)
-
-pkgtests_SCRIPTS += pkg_comp_inttest
-CLEANFILES += pkg_comp_inttest
-EXTRA_DIST += pkg_comp_inttest.sh
-pkg_comp_inttest: $(srcdir)/pkg_comp_inttest.sh
-	$(AM_V_GEN)source=pkg_comp_inttest.sh target=pkg_comp_inttest; \
+	$(AM_V_GEN)sources=pkg_comp_test.sh target=pkg_comp_test; \
 	$(BUILD_OLD_TEST)
 
 pkgtests_SCRIPTS += pkg_comp4cron_test
@@ -132,6 +126,71 @@ EXTRA_DIST += pkg_comp4cron_test.sh
 pkg_comp4cron_test: $(srcdir)/pkg_comp4cron_test.sh
 	$(AM_V_GEN)source=pkg_comp4cron_test.sh target=pkg_comp4cron_test; \
 	$(BUILD_TEST)
+
+integrationdir = $(pkgtestsdir)/integration
+
+integration_SCRIPTS = integration/auto_workflow_reusing_sandbox_test
+CLEANFILES += integration/auto_workflow_reusing_sandbox_test
+EXTRA_DIST += integration/auto_workflow_reusing_sandbox_test.sh
+integration/auto_workflow_reusing_sandbox_test: $(srcdir)/integration/common.sh \
+    $(srcdir)/integration/auto_workflow_reusing_sandbox_test.sh
+	$(AM_V_GEN)sources="integration/common.sh integration/auto_workflow_reusing_sandbox_test.sh" \
+	target=integration/auto_workflow_reusing_sandbox_test; \
+	$(BUILD_OLD_TEST)
+
+integration_SCRIPTS += integration/auto_workflow_test
+CLEANFILES += integration/auto_workflow_test
+EXTRA_DIST += integration/auto_workflow_test.sh
+integration/auto_workflow_test: $(srcdir)/integration/common.sh \
+    $(srcdir)/integration/auto_workflow_test.sh
+	$(AM_V_GEN)sources="integration/common.sh integration/auto_workflow_test.sh" \
+	target=integration/auto_workflow_test; \
+	$(BUILD_OLD_TEST)
+
+integration_SCRIPTS += integration/auto_workflow_with_fetch_test
+CLEANFILES += integration/auto_workflow_with_fetch_test
+EXTRA_DIST += integration/auto_workflow_with_fetch_test.sh
+integration/auto_workflow_with_fetch_test: $(srcdir)/integration/common.sh \
+    $(srcdir)/integration/auto_workflow_with_fetch_test.sh
+	$(AM_V_GEN)sources="integration/common.sh integration/auto_workflow_with_fetch_test.sh" \
+	target=integration/auto_workflow_with_fetch_test; \
+	$(BUILD_OLD_TEST)
+
+integration_SCRIPTS += integration/bootstrap_workflow_test
+CLEANFILES += integration/bootstrap_workflow_test
+EXTRA_DIST += integration/bootstrap_workflow_test.sh
+integration/bootstrap_workflow_test: $(srcdir)/integration/common.sh \
+    $(srcdir)/integration/bootstrap_workflow_test.sh
+	$(AM_V_GEN)sources="integration/common.sh integration/bootstrap_workflow_test.sh" \
+	target=integration/bootstrap_workflow_test; \
+	$(BUILD_OLD_TEST)
+
+integration_SCRIPTS += integration/build_workflow_test
+CLEANFILES += integration/build_workflow_test
+EXTRA_DIST += integration/build_workflow_test.sh
+integration/build_workflow_test: $(srcdir)/integration/common.sh \
+    $(srcdir)/integration/build_workflow_test.sh
+	$(AM_V_GEN)sources="integration/common.sh integration/build_workflow_test.sh" \
+	target=integration/build_workflow_test; \
+	$(BUILD_OLD_TEST)
+
+integration_SCRIPTS += integration/fetch_workflow_test
+CLEANFILES += integration/fetch_workflow_test
+EXTRA_DIST += integration/fetch_workflow_test.sh
+integration/fetch_workflow_test: $(srcdir)/integration/common.sh \
+    $(srcdir)/integration/fetch_workflow_test.sh
+	$(AM_V_GEN)sources="integration/common.sh integration/fetch_workflow_test.sh" \
+	target=integration/fetch_workflow_test; \
+	$(BUILD_OLD_TEST)
+
+integration_SCRIPTS += integration/functional_pkgsrc_after_bootstrap_test
+CLEANFILES += integration/functional_pkgsrc_after_bootstrap_test
+EXTRA_DIST += integration/functional_pkgsrc_after_bootstrap_test.sh
+integration/functional_pkgsrc_after_bootstrap_test: $(srcdir)/integration/common.sh \
+    $(srcdir)/integration/functional_pkgsrc_after_bootstrap_test.sh
+	$(AM_V_GEN)sources="integration/common.sh integration/functional_pkgsrc_after_bootstrap_test.sh" \
+	target=integration/functional_pkgsrc_after_bootstrap_test; \
+	$(BUILD_OLD_TEST)
 
 if HAVE_KYUA
 CHECK_ENVIRONMENT  = PATH=$(abs_top_builddir):$${PATH}

@@ -1,0 +1,43 @@
+-- The tests in this script are expensive to run: they use a real pkgsrc tree
+-- and a real sandbox, and test the various integration points of pkg_comp
+-- with the pkgsrc infrastructure (i.e. they build software).  These are "the
+-- real tests" because they ensure that pkgsrc works within the context of the
+-- sandbox we have created, and that pkg_comp is executing commands correctly;
+-- however, this also means that these can be fragile, as they are subject to
+-- pkgsrc API changes (good for us to spot problems) and breakage (bad as
+-- these are not our fault).
+--
+-- The following configuration variables must be set:
+--
+--     test_suites.pkg_comp.distdir
+--         Path to the persistent cache for distribution files.  This is safe
+--         to reuse across test invocations.  Read-write.
+--
+--     test_suites.pkg_comp.packages
+--         Path to a directory to hold built packages.  If not set, tests will
+--         always start from a pristine state so they will be more robust.  If
+--         set, tests may become flaky over time so set only if you know what
+--         you are doing.  Read-write.
+--
+--     test_suites.pkg_comp.pkgsrcdir
+--         Path to an pkgsrc tree cloned from Git.  Read-only.
+--
+--     test_suites.pkg_comp.sandbox_conffile
+--         Path to a sandboxctl(8) configuration file to create a clean sandbox
+--         for the current operating system.
+
+syntax(2)
+
+test_suite("pkg_comp")
+
+function integration_test(args)
+    atf_test_program{name=args.name, is_exclusive=true}
+end
+
+integration_test{name="auto_workflow_reusing_sandbox_test"}
+integration_test{name="auto_workflow_test"}
+integration_test{name="auto_workflow_with_fetch_test"}
+integration_test{name="bootstrap_workflow_test"}
+integration_test{name="build_workflow_test"}
+integration_test{name="fetch_workflow_test"}
+integration_test{name="functional_pkgsrc_after_bootstrap_test"}
