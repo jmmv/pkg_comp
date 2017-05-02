@@ -31,13 +31,20 @@ syntax(2)
 test_suite("pkg_comp")
 
 function integration_test(args)
-    atf_test_program{name=args.name, is_exclusive=true}
+    atf_test_program{
+        name=args.name,
+        is_exclusive=true,
+        required_configs="distdir pkgsrcdir sandbox_conffile",
+        required_programs=args.required_programs,
+        required_user="root",
+        timeout=3600,
+    }
 end
 
 integration_test{name="auto_workflow_reusing_sandbox_test"}
 integration_test{name="auto_workflow_test"}
-integration_test{name="auto_workflow_with_fetch_test"}
+integration_test{name="auto_workflow_with_fetch_test", required_programs="git"}
 integration_test{name="bootstrap_workflow_test"}
 integration_test{name="build_workflow_test"}
-integration_test{name="fetch_workflow_test"}
+integration_test{name="fetch_workflow_test", required_programs="git"}
 integration_test{name="functional_pkgsrc_after_bootstrap_test"}

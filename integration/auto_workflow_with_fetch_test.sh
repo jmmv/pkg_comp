@@ -32,9 +32,6 @@
 
 
 integration_test_case main
-main_inthead() {
-    atf_set require.progs "git"
-}
 main_intbody() {
     reuse_bootstrap
     reuse_packages cwrappers digest pkgconf shtk sysbuild

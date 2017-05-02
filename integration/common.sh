@@ -40,15 +40,8 @@
 
 integration_test_case() {
     atf_test_case "${1}" cleanup
-    eval "${1}_inthead() { true; }"
-    eval "${1}_head() { integration_head; ${1}_inthead; }"
     eval "${1}_body() { integration_body; ${1}_intbody; }"
     eval "${1}_cleanup() { integration_cleanup; }"
-}
-integration_head() {
-    atf_set require.config "distdir pkgsrcdir sandbox_conffile"
-    atf_set require.user "root"
-    atf_set timeout 3600
 }
 integration_body() {
     cat >pkg_comp.conf <<EOF

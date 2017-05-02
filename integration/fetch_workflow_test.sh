@@ -32,9 +32,6 @@
 
 
 integration_test_case main
-main_inthead() {
-    atf_set require.progs "git"
-}
 main_intbody() {
     setup_fetch_from_local_git
 
