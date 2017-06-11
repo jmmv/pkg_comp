@@ -73,13 +73,6 @@ m4_ifndef([SHTK_CHECK],
     [m4_fatal([Cannot find shtk.m4; see the INSTALL document for help])])
 SHTK_CHECK([>= 1.7])
 
-m4_ifndef([ATF_CHECK_SH],
-    [m4_fatal([Cannot find atf-sh.m4; see the INSTALL document for help])])
-ATF_CHECK_SH([>= 0.17])
-m4_ifndef([ATF_ARG_WITH],
-    [m4_fatal([Cannot find atf-common.m4; see the INSTALL document for help])])
-ATF_ARG_WITH
-
 
 AC_PATH_PROG([KYUA], [kyua])
 AM_CONDITIONAL([HAVE_KYUA], [test -n "${KYUA}"])

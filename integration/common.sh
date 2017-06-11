@@ -39,16 +39,16 @@
 
 
 integration_test_case() {
-    atf_test_case "${1}" cleanup
+    shtk_unittest_add_test "${1}" cleanup
     eval "${1}_body() { integration_body; ${1}_intbody; }"
     eval "${1}_cleanup() { integration_cleanup; }"
 }
 integration_body() {
     cat >pkg_comp.conf <<EOF
-DISTDIR="$(atf_config_get distdir)"
+DISTDIR="${TEST_ENV_distdir}"
 PACKAGES="$(pwd)/packages/pkg"
 PBULK_PACKAGES="$(pwd)/packages/pbulk"
-PKGSRCDIR="$(atf_config_get pkgsrcdir)"
+PKGSRCDIR="${TEST_ENV_pkgsrcdir}"
 SANDBOX_CONFFILE="$(pwd)/sandbox.conf"
 
 LOCALBASE=/test/prefix
@@ -57,7 +57,7 @@ SYSCONFDIR=/test/etc
 VARBASE=/test/var
 EOF
 
-    cp "$(atf_config_get sandbox_conffile)" sandbox.conf
+    cp "${TEST_ENV_sandbox_conffile}" sandbox.conf
     cat >>sandbox.conf <<EOF
 SANDBOX_ROOT="$(pwd)/sandbox"
 EOF
@@ -74,14 +74,14 @@ integration_cleanup() {
 
 # Configures the test to use Git to pull from pkgsrcgit.
 setup_fetch_from_local_git() {
-    [ -d "$(atf_config_get pkgsrcdir)" ] || atf_skip "pkgsrcdir does not" \
+    [ -d "${TEST_ENV_pkgsrcdir}" ] || atf_skip "pkgsrcdir does not" \
         "point to a Git repository"
 
     echo "PKGSRCDIR='$(pwd)/pkgsrc'" >>pkg_comp.conf
     # Prefer git for a faster test.
     if which git >/dev/null 2>&1; then
         echo "FETCH_VCS=git" >>pkg_comp.conf
-        echo "GIT_URL='file://$(atf_config_get pkgsrcdir)'" >>pkg_comp.conf
+        echo "GIT_URL='file://${TEST_ENV_pkgsrcdir}'" >>pkg_comp.conf
     fi
 }
 
@@ -102,7 +102,7 @@ reuse_packages() {
 
         mkdir -p packages/pkg/All
         for pkgbase in "${@}"; do
-            cp "$(atf_config_get packages)/pkg/All/${pkgbase}"-[0-9]*.tgz \
+            cp "${TEST_ENV_packages}/pkg/All/${pkgbase}"-[0-9]*.tgz \
                packages/pkg/All || true
         done
     fi
@@ -117,7 +117,7 @@ reuse_packages() {
 # tests are preferrable during development.
 reuse_bootstrap() {
     if atf_config_has packages; then
-        local packages="$(atf_config_get packages)"
+        local packages="${TEST_ENV_packages}"
 
         echo "The 'packages' configuration variable is set."
         echo "Reusing any pre-existing bootstrap binary kits and packages."
@@ -145,7 +145,7 @@ reuse_bootstrap() {
 # reuse_packages and reuse_bootstrap can use them later.
 save_state() {
     if atf_config_has packages; then
-        local packages="$(atf_config_get packages)"
+        local packages="${TEST_ENV_packages}"
         mkdir -p "${packages}/pbulk/All"
         cp packages/pbulk/bootstrap.tgz "${packages}/pbulk" || true
         cp packages/pbulk/All/* "${packages}/pbulk/All" || true

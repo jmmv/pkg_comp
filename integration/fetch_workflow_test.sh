@@ -42,8 +42,3 @@ main_intbody() {
         pkg_comp -c pkg_comp.conf fetch
     check_files pkgsrc/mk/bsd.pkg.mk
 }
-
-
-atf_init_test_cases() {
-    atf_add_test_case main
-}

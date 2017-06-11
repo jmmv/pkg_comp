@@ -103,11 +103,9 @@ To build and use pkg_comp successfully you need:
 * sandboxctl 1.0 or greater.
 * pkg-config.
 
-Optionally, if you want to build and run the tests (recommended), you
-need:
+Optionally, if you want to run the tests (recommended), you need:
 
-* ATF 0.17 or greater.
-* Kyua 0.6 or greater.
+* Kyua 0.13 or greater.
 
 If you are building pkg_comp from the code on the repository, you will
 also need the following tools:
@@ -128,15 +126,14 @@ run:
 
     $ autoreconf -i -s
 
-If ATF and/or shtk are installed in a different prefix than Autoconf,
-you will also need to tell autoreconf where the ATF and shtk M4 macros
-are located.  Otherwise, the configure script will be incomplete and
-will show confusing syntax errors mentioning, for example, ATF_CHECK_SH.
-To fix this, you have to run autoreconf in the following manner,
-replacing '<atf-prefix>' and '<shtk-prefix>' with the appropriate path:
+If shtk is installed in a different prefix than Autoconf, you will also
+need to tell autoreconf where the shtk M4 macros are located.  Otherwise,
+the configure script will be incomplete and will show confusing syntax
+errors mentioning, for example, `SHTK_CHECK`.  To fix this, you have to
+run autoreconf in the following manner, replacing '<shtk-prefix>' with
+the appropriate path:
 
-    $ autoreconf -i -s -I <atf-prefix>/share/aclocal \
-      -I <shtk-prefix>/share/aclocal
+    $ autoreconf -i -s -I <shtk-prefix>/share/aclocal
 
 ### General build procedure
 
@@ -195,31 +192,11 @@ The following environment variables are specific to pkg_comp's
   the --sysconfdir argument) under which pkg_comp will search for its
   configuration files.
 
-The following flags are specific to pkg_comp's 'configure' script:
-
-* --with-atf
-  Possible values: yes, no, auto.
-  Default: auto.
-
-  Enables usage of ATF to build (and later install) the tests.
-
-  Setting this to 'yes' causes the configure script to look for ATF
-  unconditionally and abort if not found.  Setting this to 'auto' lets
-  configure perform the best decision based on availability of ATF.
-  Setting this to 'no' explicitly disables ATF usage.
-
-  When support for tests is enabled, the build process will generate the
-  test programs and will later install them into the tests tree.
-  Running 'make check' or 'make installcheck' from within the source
-  directory will cause these tests to be run with Kyua (assuming it is
-  also installed).
-
 ### Run the tests!
 
-Lastly, after a successful installation (and assuming you built the
-sources with support for ATF), you should periodically run the tests
-from the final location to ensure things remain stable.  Do so as
-follows:
+Lastly, after a successful installation, you should periodically run
+the tests from the final location to ensure things remain stable.  Do
+so as follows:
 
     $ kyua test -k /usr/local/tests/pkg_comp/Kyuafile
 

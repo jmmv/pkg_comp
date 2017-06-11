@@ -105,8 +105,3 @@ main_intbody() {
     atf_check -e ignore pkg_comp -c pkg_comp.conf sandbox-destroy
     save_state
 }
-
-
-atf_init_test_cases() {
-    atf_add_test_case main
-}

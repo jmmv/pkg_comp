@@ -117,7 +117,7 @@ EOF
     atf_check \
         -o match:'Starting build of .*shtk-[0-9]' \
         -o match:'Successfully built .*shtk-[0-9]' \
-        -e match:"Running.*cvs.*in $(atf_config_get pkgsrcdir)" \
+        -e match:"Running.*cvs.*in ${TEST_ENV_pkgsrcdir}" \
         -e match:'cvs.*-dfake-cvsroot.*update.*-d.*-P.*-rfake-cvstag' \
         -e match:'pkg_comp: I: Updating pkgsrc tree' \
         -e match:'pkg_comp: I: Creating sandbox' \
@@ -126,9 +126,4 @@ EOF
     check_files cvs.done
 
     save_state
-}
-
-
-atf_init_test_cases() {
-    atf_add_test_case main
 }

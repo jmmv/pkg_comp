@@ -56,8 +56,3 @@ main_intbody() {
 
     save_state
 }
-
-
-atf_init_test_cases() {
-    atf_add_test_case main
-}
