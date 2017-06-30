@@ -7,6 +7,9 @@ Changes in version 2.1
   packages and not only those that were explicitly given to the `auto`
   or `build` commands after a clean rebuild of the sandbox.
 
+* PR 20: Fixed the default Git repository from jsonn's to NetBSD's as
+  it has moved upstream.
+
 
 Changes in version 2.0
 ======================

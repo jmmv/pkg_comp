@@ -68,7 +68,7 @@ pkg_comp_set_defaults() {
     shtk_config_set DISTDIR "/usr/pkgsrc/distfiles"
     shtk_config_set FETCH_VCS "cvs"
     shtk_config_set GIT_BRANCH "trunk"
-    shtk_config_set GIT_URL "https://github.com/jsonn/pkgsrc.git"
+    shtk_config_set GIT_URL "https://github.com/NetBSD/pkgsrc.git"
     shtk_config_set LOCALBASE "/usr/pkg"
     shtk_config_set NJOBS "$(shtk_hw_ncpus)"
     shtk_config_set PACKAGES "/usr/pkgsrc/packages"

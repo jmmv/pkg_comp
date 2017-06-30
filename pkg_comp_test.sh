@@ -140,7 +140,7 @@ DISTDIR = /usr/pkgsrc/distfiles
 EXTRA_MKCONF is undefined
 FETCH_VCS = cvs
 GIT_BRANCH = trunk
-GIT_URL = https://github.com/jsonn/pkgsrc.git
+GIT_URL = https://github.com/NetBSD/pkgsrc.git
 LOCALBASE = /usr/pkg
 NJOBS = 99
 PACKAGES = /usr/pkgsrc/packages
@@ -224,7 +224,7 @@ DISTDIR = /usr/pkgsrc/distfiles
 EXTRA_MKCONF is undefined
 FETCH_VCS = cvs
 GIT_BRANCH = trunk
-GIT_URL = https://github.com/jsonn/pkgsrc.git
+GIT_URL = https://github.com/NetBSD/pkgsrc.git
 LOCALBASE = /usr/pkg
 NJOBS = 80
 PACKAGES = /usr/pkgsrc/packages
