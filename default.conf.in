@@ -11,7 +11,7 @@ SANDBOX_CONFFILE="__PKG_COMP_ETCDIR__/sandbox.conf"
 #FETCH_VCS=cvs
 #CVS_ROOT=:ext:anoncvs@anoncvs.NetBSD.org:/cvsroot
 #CVS_TAG=pkgsrc-2017Q1
-#GIT_URL=https://github.com/jsonn/pkgsrc.git
+#GIT_URL=https://github.com/NetBSD/pkgsrc.git
 #GIT_BRANCH=trunk
 
 # Host file layout.  These directories point to trees managed outside of
