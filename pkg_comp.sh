@@ -340,6 +340,10 @@ bootstrap_pbulk() {
         "/pkg_comp/pbulk/var" || exit
 
     cat >>"${root}/pkg_comp/pbulk.mk.conf" <<EOF
+# Set the location of system start-up scripts to be under our own pbulk tree
+# to avoid any attempts to create /etc/rc.d (e.g., for rsyncd, even though the
+# script won't be installed) which may be on a read-only file system.
+RCD_SCRIPTS_DIR=/pkg_comp/pbulk/etc/rc.d
 # Be permissive of warnings raised during the build of our own infrastructure.
 # Linux is especially picky and it's easy to trip over different warnings on
 # different platforms.  We just don't want to abort the bootstrapping process
