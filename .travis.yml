@@ -9,7 +9,10 @@ env:
     - AS_ROOT=no SHELL_NAME=dash
     - AS_ROOT=no SHELL_NAME=pdksh
     - AS_ROOT=no SHELL_NAME=zsh
-    - AS_ROOT=yes SHELL_NAME=dash
+    - AS_ROOT=yes INTTEST_SHARD=0 INTTEST_SHARDS=4 SHELL_NAME=dash
+    - AS_ROOT=yes INTTEST_SHARD=1 INTTEST_SHARDS=4 SHELL_NAME=dash
+    - AS_ROOT=yes INTTEST_SHARD=2 INTTEST_SHARDS=4 SHELL_NAME=dash
+    - AS_ROOT=yes INTTEST_SHARD=3 INTTEST_SHARDS=4 SHELL_NAME=dash
 
 script:
     - travis_wait 60 ./admin/travis-build.sh

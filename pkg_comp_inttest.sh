@@ -59,6 +59,19 @@
 #         for the current operating system.
 
 
+# Controls sharding for the long-running integration tests in this file.
+#
+# Travis CI imposes a 1-hour limit for the execution of each individual build,
+# which is insufficient to run all of our integration tests.  To make testing
+# possible, we support sharding execution.  The INTTEST_SHARD variable
+# indicates the identifier of this shard, which has to be in the range from
+# zero to INTTEST_SHARDS.
+#
+# TODO(jmmv): This feature should be supported natively by Kyua.
+: ${INTTEST_SHARD=0}
+: ${INTTEST_SHARDS=1}
+
+
 # Paths to installed files.
 #
 # Can be overriden for test purposes only.
@@ -581,11 +594,20 @@ auto_workflow_reusing_sandbox_intbody() {
 
 
 atf_init_test_cases() {
-    atf_add_test_case bootstrap_workflow
-    atf_add_test_case functional_pkgsrc_after_bootstrap
-    atf_add_test_case build_workflow
-    atf_add_test_case fetch_workflow
-    atf_add_test_case auto_workflow
-    atf_add_test_case auto_workflow_with_fetch
-    atf_add_test_case auto_workflow_reusing_sandbox
+    local tests=
+    tests="${tests} auto_workflow"
+    tests="${tests} auto_workflow_reusing_sandbox"
+    tests="${tests} auto_workflow_with_fetch"
+    tests="${tests} bootstrap_workflow"
+    tests="${tests} build_workflow"
+    tests="${tests} fetch_workflow"
+    tests="${tests} functional_pkgsrc_after_bootstrap"
+
+    local i=0
+    for t in ${tests}; do
+        if [ "${i}" -eq "${INTTEST_SHARD}" ]; then
+            atf_add_test_case "${t}"
+        fi
+        i=$(( (${i} + 1) % ${INTTEST_SHARDS} ))
+    done
 }
