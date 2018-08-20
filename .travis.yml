@@ -12,4 +12,4 @@ env:
     - AS_ROOT=yes SHELL_NAME=dash
 
 script:
-    - ./admin/travis-build.sh
+    - travis_wait 60 ./admin/travis-build.sh
