@@ -167,10 +167,6 @@ setup_bootstrap() {
             "cd / && tar xzpf /pkg_comp/packages/${basename}/bootstrap.tgz" \
             || exit
     else
-        mkdir -p "${root}/pkg_comp/work"
-        echo ".sinclude \"/pkg_comp/${basename}.mk.conf\"" \
-             >"${root}/pkg_comp/work/mk.conf.fragment"
-
         # Wipe any previous bootstrap work directory.  This is helpful in
         # case a bootstrap execution failed for reasons unknown to us and
         # the user wants to retry without recreating the sandbox from scratch.
@@ -198,7 +194,6 @@ setup_bootstrap() {
                  ./bootstrap \
                  --gzip-binary-kit=/pkg_comp/packages/${basename}/bootstrap.tgz\
                  --make-jobs='$(shtk_config_get NJOBS)' \
-                 --mk-fragment='/pkg_comp/work/mk.conf.fragment' \
                  --pkgdbdir='${pkgdbdir}' \
                  --prefix='${prefix}' \
                  --sysconfdir='${sysconfdir}' \
@@ -225,6 +220,13 @@ setup_make() {
     local sysconfdir="${1}"; shift
 
     local mk_conf="/pkg_comp/${basename}.mk.conf"
+    local include=".include \"${mk_conf}\""
+    if ! grep -qF "${include}" "${root}${sysconfdir}/mk.conf"; then
+        echo ".ifdef BSD_PKG_MK" >>"${root}${sysconfdir}/mk.conf"
+        echo "${include}" >>"${root}${sysconfdir}/mk.conf"
+        echo ".endif" >>"${root}${sysconfdir}/mk.conf"
+    fi
+
     local symlink="/pkg_comp/make-${basename}"
     [ ! -e "${root}${mk_conf}" -o ! -e "${root}${symlink}" ] || return 0
 
@@ -394,6 +396,23 @@ EOF
     pbulk_set pkgsrc /pkg_comp/pkgsrc
     pbulk_set prefix "$(shtk_config_get LOCALBASE)"
     pbulk_set varbase "$(shtk_config_get VARBASE)"
+
+    # Extend pbulk's client-clean script so that, once the bootstrap kit has
+    # been extracted, we can modify the system-wide mk.conf to pull in our
+    # chroot-specific settings.
+    #
+    # TODO(jmmv): Ideally, we would either generate a wrapper script for
+    # client-clean and source it from the configuration (but that's not possible
+    # because some pbulk scripts hardcode the script they run), or we would
+    # extend pbulk to support some form of "mk-fragment" option like the
+    # bootstrap setup does.
+    cat >>"${root}/pkg_comp/pbulk/libexec/pbulk/client-clean" <<EOF
+cat >>"$(shtk_config_get SYSCONFDIR)/mk.conf" <<SUBEOF
+.ifdef BSD_PKG_MK
+.include "/pkg_comp/pkg.mk.conf"
+.endif
+SUBEOF
+EOF
 }
 
 

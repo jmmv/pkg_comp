@@ -293,6 +293,12 @@ bootstrap_workflow_intbody() {
     grep -v nbpatch exp_contents.txt >exp_contents.clean.txt
     atf_check -o file:exp_contents.clean.txt -x "find sandbox | sort"
 
+    # Ensure the public bootstrap kit does not leak pkg_comp settings.
+    tar xzvf packages/pkg/bootstrap.tgz ./test/etc/mk.conf
+    if grep /pkg_comp/ ./test/etc/mk.conf; then
+        atf_fail "Found internal paths to the sandbox in mk.conf"
+    fi
+
     atf_check -e ignore pkg_comp -c pkg_comp.conf sandbox-destroy
     save_state
 }
