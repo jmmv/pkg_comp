@@ -3,6 +3,9 @@ Changes in version 2.1
 
 **STILL UNDER DEVELOPMENT; NOT RELEASED YET.**
 
+* Issue 4: Fixed the installable bootstrap kit generated during a build
+  to not leak pkg_comp-internal paths.
+
 * Issue 10: Fixed generation of pkg_summary so that it includes all
   packages and not only those that were explicitly given to the `auto`
   or `build` commands after a clean rebuild of the sandbox.
