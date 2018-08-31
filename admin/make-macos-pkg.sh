@@ -162,6 +162,7 @@ EOF
     edit_config "${f}" PKGSRCDIR /var/pkg_comp/pkgsrc
     edit_config "${f}" DISTDIR /var/pkg_comp/distfiles
     edit_config "${f}" PACKAGES /var/pkg_comp/packages
+    edit_config "${f}" PBULK_LOG /var/pkg_comp/log/pbulk
     edit_config "${f}" PBULK_PACKAGES /var/pkg_comp/pbulk-packages
     edit_config "${f}" LOCALBASE /opt/pkg
     edit_config "${f}" PKG_DBDIR /opt/pkg/libdata/pkgdb

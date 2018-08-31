@@ -54,10 +54,12 @@ post_create_hook() {
     # sandbox... but this behavior is less annoying.
     mkdir -p "${DISTDIR}"
     mkdir -p "${PACKAGES}"
+    mkdir -p "${PBULK_LOG}"
     mkdir -p "${PBULK_PACKAGES}"
     mkdir -p "${PKGSRCDIR}"
 
     mkdir "${SANDBOX_ROOT}/pkg_comp"
+    mkdir "${SANDBOX_ROOT}/pkg_comp/bulklog"
     mkdir "${SANDBOX_ROOT}/pkg_comp/distfiles"
     mkdir "${SANDBOX_ROOT}/pkg_comp/packages"
     mkdir "${SANDBOX_ROOT}/pkg_comp/packages/pbulk"
@@ -74,6 +76,7 @@ post_create_hook() {
 post_mount_hook() {
     _pkg_comp_validate_variables
 
+    sandbox_bindfs -o rw "${PBULK_LOG}" "${SANDBOX_ROOT}/pkg_comp/bulklog"
     sandbox_bindfs -o rw "${DISTDIR}" "${SANDBOX_ROOT}/pkg_comp/distfiles"
     sandbox_bindfs -o rw "${PACKAGES}" "${SANDBOX_ROOT}/pkg_comp/packages/pkg"
     sandbox_bindfs -o rw "${PBULK_PACKAGES}" \

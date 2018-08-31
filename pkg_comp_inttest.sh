@@ -95,6 +95,7 @@ integration_body() {
     cat >pkg_comp.conf <<EOF
 DISTDIR="$(atf_config_get distdir)"
 PACKAGES="$(pwd)/packages/pkg"
+PBULK_LOG="$(pwd)/bulklog"
 PBULK_PACKAGES="$(pwd)/packages/pbulk"
 PKGSRCDIR="$(atf_config_get pkgsrcdir)"
 SANDBOX_CONFFILE="$(pwd)/sandbox.conf"
@@ -131,6 +132,12 @@ setup_fetch_from_local_git() {
         echo "FETCH_VCS=git" >>pkg_comp.conf
         echo "GIT_URL='file://$(atf_config_get pkgsrcdir)'" >>pkg_comp.conf
     fi
+
+    # Configure Git in case our tests want to modify the pkgsrc files.  In those
+    # cases, pkg_comp will need to stash the modifications during "fetch" and
+    # we need these details.
+    git config --global user.email "travis@example.com"
+    git config --global user.name "Travis"
 }
 
 
@@ -599,6 +606,40 @@ auto_workflow_reusing_sandbox_intbody() {
 }
 
 
+integration_test_case logs_workflow
+logs_workflow_intbody() {
+    reuse_bootstrap
+    reuse_packages cwrappers digest
+
+    setup_fetch_from_local_git
+
+    atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf fetch
+
+    check_files pkgsrc/pkgtools/verifypc/Makefile
+    cat >>pkgsrc/pkgtools/verifypc/Makefile <<EOF
+pre-extract: always-fail
+always-fail: .PHONY
+	false
+EOF
+
+    atf_check \
+        -s exit:1 \
+        -o match:'Starting build of .*verifypc' \
+        -o match:'Failed to build.*verifypc' \
+        -e match:'Failed to build.*verifypc.*detailed logs' \
+        pkg_comp -c pkg_comp.conf auto verifypc
+
+    # Check presence of pbulk summary logs.
+    test -f bulklog/report.txt || fail "report.txt not found in bulklog"
+    test -f bulklog/report.html || fail "report.txt not found in bulklog"
+
+    # Check presence of package-specific logs.
+    test -f bulklog/verifypc*/failure || fail "verifypc-specific logs not found"
+
+    save_state
+}
+
+
 atf_init_test_cases() {
     local tests=
     tests="${tests} auto_workflow"
@@ -608,6 +649,7 @@ atf_init_test_cases() {
     tests="${tests} build_workflow"
     tests="${tests} fetch_workflow"
     tests="${tests} functional_pkgsrc_after_bootstrap"
+    tests="${tests} logs_workflow"
 
     local i=0
     for t in ${tests}; do

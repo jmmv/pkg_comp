@@ -19,6 +19,7 @@ SANDBOX_CONFFILE="__PKG_COMP_ETCDIR__/sandbox.conf"
 PKGSRCDIR="/usr/pkgsrc"
 DISTDIR="${PKGSRCDIR}/distfiles"
 PACKAGES="${PKGSRCDIR}/packages"
+PBULK_LOG="${PACKAGES}/log"
 PBULK_PACKAGES="${PACKAGES}/pbulk"
 
 # Target file layout.  These are the directories that the built binary

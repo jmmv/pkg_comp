@@ -25,7 +25,7 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.Dd February 17, 2017
+.Dd August 30, 2018
 .Dt PKG_COMP 8
 .Os
 .Sh NAME
@@ -253,6 +253,20 @@ This is necessary to keep fully-populated
 databases.
 However, because pbulk reuses existing binary packages and only rebuilds updated
 packages, any packages not given on the command line should "build" quickly.
+.Pp
+In case of build problems, detailed logs for each package that failed to build
+will be located in the directory pointed at by
+.Va PBULK_LOG .
+Of special interest is the
+.Pa SUMMARY
+subdirectory, which contains summary reports of the whole operation in various
+different formats.
+Examples are:
+.Pa report.html
+and
+.Pa report.txt ,
+both of which summarize how many packages were built and include details of all
+that failed.
 .Ss The config command
 The config command dumps the loaded configuration to the standard output.
 The format of the output is not a script, so it cannot be fed back into

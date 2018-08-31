@@ -44,8 +44,8 @@ SHTK_MODULESPATH="${PKG_COMP_SHTK_MODULESDIR}" shtk_import pkgsrc
 # Please remember to update pkg_comp.conf(5) if you change this list.
 PKG_COMP_CONFIG_VARS="AUTO_PACKAGES CVS_ROOT CVS_TAG DISTDIR EXTRA_MKCONF
                       FETCH_VCS GIT_BRANCH GIT_URL LOCALBASE NJOBS PACKAGES
-                      PBULK_PACKAGES PKG_DBDIR PKGSRCDIR SANDBOX_CONFFILE
-                      SYSCONFDIR UPDATE_SOURCES VARBASE"
+                      PBULK_LOG PBULK_PACKAGES PKG_DBDIR PKGSRCDIR
+                      SANDBOX_CONFFILE SYSCONFDIR UPDATE_SOURCES VARBASE"
 
 
 # Paths to installed files.
@@ -72,6 +72,7 @@ pkg_comp_set_defaults() {
     shtk_config_set LOCALBASE "/usr/pkg"
     shtk_config_set NJOBS "$(shtk_hw_ncpus)"
     shtk_config_set PACKAGES "/usr/pkgsrc/packages"
+    shtk_config_set PBULK_LOG "/usr/pkgsrc/packages/log"
     shtk_config_set PBULK_PACKAGES "/usr/pkgsrc/packages/pbulk"
     shtk_config_set PKG_DBDIR "/usr/pkg/libdata/pkgdb"
     shtk_config_set PKGSRCDIR "/usr/pkgsrc"
@@ -119,6 +120,7 @@ run_sandboxctl() {
             cat <<EOF
 DISTDIR="$(shtk_config_has DISTDIR && shtk_config_get DISTDIR)"
 PACKAGES="$(shtk_config_has PACKAGES && shtk_config_get PACKAGES)"
+PBULK_LOG="$(shtk_config_has PBULK_LOG && shtk_config_get PBULK_LOG)"
 PBULK_PACKAGES="$(shtk_config_has PBULK_PACKAGES \
     && shtk_config_get PBULK_PACKAGES)"
 PKGSRCDIR="$(shtk_config_has PKGSRCDIR && shtk_config_get PKGSRCDIR)"
@@ -385,9 +387,9 @@ EOF
     pbulk_set unprivileged_user root
 
     # Configure pbulk's file layout.
-    pbulk_set bulklog /pkg_comp/work/bulklog
+    pbulk_set bulklog /pkg_comp/bulklog
     pbulk_set limited_list /pkg_comp/pbulk/etc/pbulk.list
-    pbulk_set loc /pkg_comp/work/bulklog/meta
+    pbulk_set loc /pkg_comp/bulklog/SUMMARY
 
     # Configure pkgsrc's file layout.
     pbulk_set bootstrapkit "/pkg_comp/packages/pkg/bootstrap.tgz"
@@ -546,14 +548,25 @@ pkg_comp_build() {
         echo "${package}" >>"${list}"
     done
 
+    local bulklog="$(shtk_config_get PBULK_LOG)"
+
     # Removing bulklog/success seems to be necessary to restart a build, as
     # otherwise bulkbuild does not build modified packages.  Is this correct?
-    rm -f "${root}/pkg_comp/work/bulklog/success"
+    rm -f "${root}/pkg_comp/bulklog/success"
+
     shtk_cli_info "Starting pbulk build in the sandbox"
     run_sandboxctl run /pkg_comp/pbulk/bin/bulkbuild || \
-        shtk_cli_error "bulkbuild failed; see ${root}/pkg_comp/work/bulklog/" \
-            "for possible details"
+        shtk_cli_error "bulkbuild failed; see ${bulklog}/ for possible details"
     generate_pkg_summary "${root}"
+
+    if [ -s "${bulklog}/SUMMARY/error" ]; then
+        local errors="$(cat ${bulklog}/SUMMARY/error)"
+        shtk_cli_error "Failed to build ${errors}; see ${bulklog}/ for" \
+            "detailed logs"
+    else
+        shtk_cli_info "All packages built successfully; summary reports are" \
+            "in ${bulklog}/SUMMARY/"
+    fi
 }
 
 

@@ -144,6 +144,7 @@ GIT_URL = https://github.com/NetBSD/pkgsrc.git
 LOCALBASE = /usr/pkg
 NJOBS = 99
 PACKAGES = /usr/pkgsrc/packages
+PBULK_LOG = /usr/pkgsrc/packages/log
 PBULK_PACKAGES = /usr/pkgsrc/packages/pbulk
 PKG_DBDIR = /usr/pkg/libdata/pkgdb
 PKGSRCDIR = /usr/pkgsrc
@@ -228,6 +229,7 @@ GIT_URL = https://github.com/NetBSD/pkgsrc.git
 LOCALBASE = /usr/pkg
 NJOBS = 80
 PACKAGES = /usr/pkgsrc/packages
+PBULK_LOG = /usr/pkgsrc/packages/log
 PBULK_PACKAGES = /usr/pkgsrc/packages/pbulk
 PKG_DBDIR = /usr/pkg/libdata/pkgdb
 PKGSRCDIR is undefined
@@ -447,6 +449,7 @@ sandboxctl__create_destroy_integration_body() {
     cat >pkg_comp.conf <<EOF
 DISTDIR="$(pwd)/distfiles"
 PACKAGES="$(pwd)/packages/pkg"
+PBULK_LOG="$(pwd)/packages/log"
 PBULK_PACKAGES="$(pwd)/packages/pbulk"
 PKGSRCDIR="$(pwd)/pkgsrc"
 SANDBOX_CONFFILE="$(pwd)/sandbox.conf"
