@@ -32,6 +32,10 @@
 # This script must be run with root privileges because we install the
 # software under /usr/local.
 #
+# Any arguments passed to this script are delegated to bootstrap.sh, which
+# makes it possible to generate packages for unreleased versions of pkg_comp
+# and its dependencies.
+#
 # TODO(jmmv): A lot of the logic in this script should be moved into either
 # separate files or into pkg_comp proper.  For example, the cron job
 # manipulation code may belong into pkg_comp as user-facing commands, and
@@ -206,12 +210,6 @@ EOF
 
 # Program's entry point.
 main() {
-    if [ ${#} -ne 0 ]; then
-        echo "${ProgName}: E: No arguments allowed" 1>&2
-        echo "Usage: ${ProgName}" 1>&2
-        exit 1
-    fi
-
     [ "$(uname -s)" = Darwin ] || err "This script is for macOS only"
     [ -x "${DirName}/bootstrap.sh" ] || err "bootstrap.sh not found; make" \
         "sure to run this from a cloned repository"
@@ -227,12 +225,13 @@ main() {
     # Bootstrap under a clean prefix to generate a manifest of all the files
     # required by our installation.
     info "Doing temporary bootstrap to generate file manifest"
-    "${DirName}/bootstrap.sh" "${tempdir}/prefix" || err "Bootstrap failed"
+    "${DirName}/bootstrap.sh" "${@}" "${tempdir}/prefix" \
+        || err "Bootstrap failed"
     ( cd "${tempdir}/prefix" && find . \! -type d ) >"${tempdir}/manifest"
 
     # Bootstrap under the final location.
     info "Doing real bootstrap under prefix"
-    "${DirName}/bootstrap.sh" /usr/local || err "Bootstrap failed"
+    "${DirName}/bootstrap.sh" "${@}" /usr/local || err "Bootstrap failed"
 
     info "Generating package root"
     mkdir -p "${tempdir}/root/usr/local"

@@ -32,6 +32,11 @@
 # This file must be self-contained so that it can be downloaded from the
 # repository and used to install pkg_comp and all necessary components on the
 # supported platforms.
+#
+# The -d flag can be used to customize the location and version of some
+# dependencies.  This flag exists purely to support testing this script
+# against unreleased versions of those packages and should not be used in
+# the general case.
 
 
 # Base name of the running script.
@@ -65,17 +70,27 @@ download() {
 
     info "Downloading ${url}"
     local done=no
-    case "$(uname -s)" in
-        FreeBSD)
-            fetch -o "${file}" "${url}" || err "Failed to download ${url}"
-            done=yes
-            ;;
 
-        NetBSD)
-            ftp -o "${file}" "${url}" || err "Failed to download ${url}"
+    case "${url}" in
+        /*)
+            cp "${url}" "${file}" || err "Failed to copy ${url}"
             done=yes
             ;;
     esac
+
+    if [ "${done}" = no ]; then
+        case "$(uname -s)" in
+            FreeBSD)
+                fetch -o "${file}" "${url}" || err "Failed to download ${url}"
+                done=yes
+                ;;
+
+            NetBSD)
+                ftp -o "${file}" "${url}" || err "Failed to download ${url}"
+                done=yes
+                ;;
+        esac
+    fi
 
     if [ "${done}" = no ]; then
         if which curl >/dev/null; then
@@ -118,25 +133,61 @@ build() {
 }
 
 
+# Prints a usage error and a syntax summary.
+usage_error() {
+    echo "${ProgName}:" "${@}" 1>&2
+    echo "Usage: ${ProgName} [-d PKGNAME=URL.tar.gz] [prefix]" 1>&2
+    exit 1
+}
+
+
 # Program's entry point.
 main() {
+    local pkg_comp_url="https://github.com/jmmv/pkg_comp/releases/download/pkg_comp-2.0/pkg_comp-2.0.tar.gz"
+    local sandboxctl_url="https://github.com/jmmv/sandboxctl/releases/download/sandboxctl-1.0/sandboxctl-1.0.tar.gz"
+    local shtk_url="https://github.com/jmmv/shtk/releases/download/shtk-1.7/shtk-1.7.tar.gz"
+
+    local OPTIND  # Cope with bash failing to reinitialize getopt.
+    while getopts ':d:' arg "${@}"; do
+        case "${arg}" in
+            d)  # Distfile override of the form PKGNAME=URL.tar.gz
+                local pkgname="${OPTARG%%=*}"
+                local url="${OPTARG#*=}"
+
+                case "${pkgname}" in
+                    pkg_comp) pkg_comp_url="${url}" ;;
+                    sandboxctl) sandboxctl_url="${url}" ;;
+                    shtk) shtk_url="${url}" ;;
+                    *) usage_error "Unknown pkgname ${pkgname} in -d flag" ;;
+                esac
+                ;;
+            \?)
+                usage_error "Unknown option -${OPTARG} in build"
+                ;;
+        esac
+    done
+    shift $((${OPTIND} - 1))
+
     local prefix
     if [ ${#} -eq 0 ]; then
         prefix=/usr/local
     elif [ ${#} -eq 1 ]; then
         prefix="${1}"
     else
-        echo "${ProgName}: E: Invalid number of arguments" 1>&2
-        echo "Usage: ${ProgName} [prefix]" 1>&2
-        exit 1
+        usage_error "Invalid number of arguments"
     fi
+
+    local pkg_comp_distname="${pkg_comp_url##*/}"
+    local sandboxctl_distname="${sandboxctl_url##*/}"
+    local shtk_distname="${shtk_url##*/}"
 
     info "Bootstrapping pkg_comp installation into ${prefix}"
 
     local tempdir
     tempdir="$(mktemp -d "${TMPDIR:-/tmp}/${ProgName}.XXXXXX" 2>/dev/null)" \
         || err "Failed to create temporary directory"
-    trap "rm -rf '${tempdir}'" EXIT
+        echo $tempdir
+    #trap "rm -rf '${tempdir}'" EXIT
 
     PATH="${prefix}/bin:${prefix}/sbin:${PATH}"
     export PKG_CONFIG_PATH="${prefix}/lib/pkgconfig"
@@ -156,11 +207,9 @@ main() {
             ;;
     esac
 
-    for pkg in shtk-1.7 sandboxctl-1.0 pkg_comp-2.0; do
-        local repository="https://github.com/jmmv/${pkg%-*}"
-        download "${repository}/releases/download/${pkg}/${pkg}.tar.gz" \
-            "${tempdir}/${pkg}.tar.gz" || exit 1
-    done
+    download "${pkg_comp_url}" "${tempdir}/${pkg_comp_distname}"
+    download "${sandboxctl_url}" "${tempdir}/${sandboxctl_distname}"
+    download "${shtk_url}" "${tempdir}/${shtk_distname}"
 
     if [ -e "${tempdir}/pkgconf-1.3.0.tar.gz" ]; then
         build "${tempdir}" pkgconf-1.3.0 --prefix="${tempdir}/tools" || exit 1
@@ -169,13 +218,13 @@ main() {
     if [ -e "${tempdir}/bindfs-1.13.6.tar.gz" ]; then
         build "${tempdir}" bindfs-1.13.6 --prefix="${prefix}" || exit 1
     fi
-    build "${tempdir}" shtk-1.7 --prefix="${prefix}" SHTK_SHELL=/bin/sh \
+    build "${tempdir}" "${shtk_distname%.tar.gz}" \
+        --prefix="${prefix}" SHTK_SHELL=/bin/sh || exit 1
+    build "${tempdir}" "${sandboxctl_distname%.tar.gz}" \
+        --prefix="${prefix}" --with-atf=no BINDFS="${prefix}/bin/bindfs" \
         || exit 1
-    build "${tempdir}" sandboxctl-1.0 --prefix="${prefix}" --with-atf=no \
-        BINDFS="${prefix}/bin/bindfs" \
-        || exit 1
-    build "${tempdir}" pkg_comp-2.0 --prefix="${prefix}" --with-atf=no \
-        || exit 1
+    build "${tempdir}" "${pkg_comp_distname%.tar.gz}" \
+        --prefix="${prefix}" --with-atf=no || exit 1
 
     info "Bootstrapping successful"
     info "pkg_comp is available at: ${prefix}/sbin/pkg_comp"
