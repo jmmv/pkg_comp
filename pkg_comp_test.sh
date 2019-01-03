@@ -147,6 +147,7 @@ PACKAGES = /usr/pkgsrc/packages
 PBULK_LOG = /usr/pkgsrc/packages/log
 PBULK_PACKAGES = /usr/pkgsrc/packages/pbulk
 PKG_DBDIR = /usr/pkg/libdata/pkgdb
+PKG_DEVELOPER = no
 PKGSRCDIR = /usr/pkgsrc
 SANDBOX_CONFFILE is undefined
 SYSCONFDIR = /etc
@@ -232,6 +233,7 @@ PACKAGES = /usr/pkgsrc/packages
 PBULK_LOG = /usr/pkgsrc/packages/log
 PBULK_PACKAGES = /usr/pkgsrc/packages/pbulk
 PKG_DBDIR = /usr/pkg/libdata/pkgdb
+PKG_DEVELOPER = no
 PKGSRCDIR is undefined
 SANDBOX_CONFFILE = $(pwd)/sandbox.conf
 SYSCONFDIR = /etc

@@ -44,7 +44,7 @@ SHTK_MODULESPATH="${PKG_COMP_SHTK_MODULESDIR}" shtk_import pkgsrc
 # Please remember to update pkg_comp.conf(5) if you change this list.
 PKG_COMP_CONFIG_VARS="AUTO_PACKAGES CVS_ROOT CVS_TAG DISTDIR EXTRA_MKCONF
                       FETCH_VCS GIT_BRANCH GIT_URL LOCALBASE NJOBS PACKAGES
-                      PBULK_LOG PBULK_PACKAGES PKG_DBDIR PKGSRCDIR
+                      PBULK_LOG PBULK_PACKAGES PKG_DBDIR PKG_DEVELOPER PKGSRCDIR
                       SANDBOX_CONFFILE SYSCONFDIR UPDATE_SOURCES VARBASE"
 
 
@@ -75,6 +75,7 @@ pkg_comp_set_defaults() {
     shtk_config_set PBULK_LOG "/usr/pkgsrc/packages/log"
     shtk_config_set PBULK_PACKAGES "/usr/pkgsrc/packages/pbulk"
     shtk_config_set PKG_DBDIR "/usr/pkg/libdata/pkgdb"
+    shtk_config_set PKG_DEVELOPER "no"
     shtk_config_set PKGSRCDIR "/usr/pkgsrc"
     shtk_config_set SYSCONFDIR "/etc"
     shtk_config_set UPDATE_SOURCES "true"
@@ -124,6 +125,8 @@ PBULK_LOG="$(shtk_config_has PBULK_LOG && shtk_config_get PBULK_LOG)"
 PBULK_PACKAGES="$(shtk_config_has PBULK_PACKAGES \
     && shtk_config_get PBULK_PACKAGES)"
 PKGSRCDIR="$(shtk_config_has PKGSRCDIR && shtk_config_get PKGSRCDIR)"
+PKG_DEVELOPER="$(shtk_config_has PKG_DEVELOPER \
+    && shtk_config_get PKG_DEVELOPER)"
 EOF
             [ -z "${userconf}" ] || cat "${userconf}"
             cat "${PKG_COMP_SHAREDIR}/sandbox.conf.post"
@@ -243,6 +246,8 @@ BINPKG_SITES=
 DEPENDS_TARGET=bin-install
 
 MAKE_JOBS=$(shtk_config_get NJOBS)
+
+PKG_DEVELOPER=$(shtk_config_get PKG_DEVELOPER)
 EOF
 
     ln -s "${prefix}/bin/bmake" "${root}${symlink}"

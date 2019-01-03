@@ -640,6 +640,31 @@ EOF
 }
 
 
+integration_test_case pkg_developer_workflow
+pkg_developer_workflow_intbody() {
+    reuse_bootstrap
+    reuse_packages cwrappers digest
+
+    setup_fetch_from_local_git
+
+    echo "PKG_DEVELOPER=yes" >>pkg_comp.conf
+    atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf fetch
+    atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf sandbox-create
+    atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf bootstrap
+    atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf sandbox-run \
+        touch /pkg_comp/pkgsrc/pkg_comp.cookie
+
+    test -f pkgsrc/pkg_comp.cookie || fail "File created in pkgsrc not found"
+    grep "PKG_DEVELOPER.*yes" sandbox/pkg_comp/pbulk.mk.conf \
+        || fail "PKG_DEVELOPER setting not found in pbulk.mk.conf"
+    grep "PKG_DEVELOPER.*yes" sandbox/pkg_comp/pkg.mk.conf \
+        || fail "PKG_DEVELOPER setting not found in pkg.mk.conf"
+
+    atf_check -o ignore -e ignore pkg_comp -c pkg_comp.conf sandbox-destroy
+    save_state
+}
+
+
 atf_init_test_cases() {
     local tests=
     tests="${tests} auto_workflow"
@@ -650,6 +675,7 @@ atf_init_test_cases() {
     tests="${tests} fetch_workflow"
     tests="${tests} functional_pkgsrc_after_bootstrap"
     tests="${tests} logs_workflow"
+    tests="${tests} pkg_developer_workflow"
 
     local i=0
     for t in ${tests}; do

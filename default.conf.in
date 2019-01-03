@@ -29,5 +29,8 @@ PBULK_PACKAGES="${PACKAGES}/pbulk"
 #SYSCONFDIR=/etc
 #VARBASE=/var
 
+# Enable interactive pkgsrc development via sandbox-shell.
+#PKG_DEVELOPER=yes
+
 # List of packages to build during automatic execution.
 #AUTO_PACKAGES="bash emacs kyua pkg_comp tmux"

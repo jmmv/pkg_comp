@@ -25,7 +25,7 @@
 .\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.Dd August 30, 2018
+.Dd January 3, 2019
 .Dt PKG_COMP.CONF 5
 .Os
 .Sh NAME
@@ -229,6 +229,16 @@ et. al. will maintain the database of installed directories.
 .Pp
 Default:
 .Pa /usr/pkg/libdata/pkgdb .
+.It Va PKG_DEVELOPER
+Enables development of pkgsrc packages within the sandbox via the
+.Sq sandbox-shell
+subcommand.
+This causes this same variable to be set in
+.Xr mk.conf 5
+and mounts pkgsrc in read/write mode.
+.Pp
+Default:
+.Pa no .
 .It Va SYSCONFDIR
 Absolute path to the directory in which to install managed configuration
 files.
