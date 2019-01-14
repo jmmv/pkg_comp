@@ -27,8 +27,8 @@ This is not an official Google product.
 
 ## Download and installation
 
-The latest version is **[pkg_comp 2.0](../../releases/tag/pkg_comp-2.0)**
-and was released on February 17th, 2017.
+The latest version is **[pkg_comp 2.1](../../releases/tag/pkg_comp-2.1)**
+and was released on January 14th, 2019.
 
 **Read the [installation instructions](INSTALL.md)** for details on which
 file to download and how to get started.

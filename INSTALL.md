@@ -27,7 +27,7 @@ that should be the only necessary dependency.
 ## Using the macOS installer
 
 **Download and run the
-[pkg_comp-2.0-20170223-macos.pkg](../../releases/download/pkg_comp-2.0/pkg_comp-2.0-20170223-macos.pkg)
+[pkg_comp-2.1-20190114-macos.pkg](../../releases/download/pkg_comp-2.1/pkg_comp-2.1-20190114-macos.pkg)
 installer.**  As a prerequisite on macOS, you will also have to **[download
 and install OSXFUSE 3](https://osxfuse.github.io/).**
 
@@ -68,7 +68,7 @@ The following packages are known to exist:
 ## Building from source
 
 Download the
-[pkg_comp-2.0.tar.gz](../../releases/download/pkg_comp-2.0/pkg_comp-2.0.tar.gz)
+[pkg_comp-2.1.tar.gz](../../releases/download/pkg_comp-2.1/pkg_comp-2.1.tar.gz)
 distribution file.
 
 pkg_comp uses the GNU Automake and GNU Autoconf utilities as its build

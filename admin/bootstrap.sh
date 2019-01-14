@@ -143,8 +143,8 @@ usage_error() {
 
 # Program's entry point.
 main() {
-    local pkg_comp_url="https://github.com/jmmv/pkg_comp/releases/download/pkg_comp-2.0/pkg_comp-2.0.tar.gz"
-    local sandboxctl_url="https://github.com/jmmv/sandboxctl/releases/download/sandboxctl-1.0/sandboxctl-1.0.tar.gz"
+    local pkg_comp_url="https://github.com/jmmv/pkg_comp/releases/download/pkg_comp-2.1/pkg_comp-2.1.tar.gz"
+    local sandboxctl_url="https://github.com/jmmv/sandboxctl/releases/download/sandboxctl-1.1/sandboxctl-1.1.tar.gz"
     local shtk_url="https://github.com/jmmv/shtk/releases/download/shtk-1.7/shtk-1.7.tar.gz"
 
     local OPTIND  # Cope with bash failing to reinitialize getopt.
@@ -187,7 +187,7 @@ main() {
     tempdir="$(mktemp -d "${TMPDIR:-/tmp}/${ProgName}.XXXXXX" 2>/dev/null)" \
         || err "Failed to create temporary directory"
         echo $tempdir
-    #trap "rm -rf '${tempdir}'" EXIT
+    trap "rm -rf '${tempdir}'" EXIT
 
     PATH="${prefix}/bin:${prefix}/sbin:${PATH}"
     export PKG_CONFIG_PATH="${prefix}/lib/pkgconfig"

@@ -1,7 +1,7 @@
 Changes in version 2.1
 ======================
 
-**STILL UNDER DEVELOPMENT; NOT RELEASED YET.**
+**Released on 2019-01-14.**
 
 * Issue 3: Added a new `PBULK_LOG` setting to point at a location that
   holds all build logs, and made the `build` command print out details
