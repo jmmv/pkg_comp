@@ -341,9 +341,7 @@ configuration variable.
 .Sh EXAMPLES
 The following examples assume that you have already configured
 .Xr pkg_comp.conf 5
-and its corresponding
-.Xr sandbox.conf 5
-file.
+and its corresponding sandbox.conf file.
 .Pp
 To build a collection of packages from scratch, on a system in which you may not
 yet have pkgsrc nor an existent sandbox:
@@ -373,6 +371,7 @@ is:
 .Sh SEE ALSO
 .Xr cvs 1 ,
 .Xr pkg_comp.conf 5 ,
+.Xr sandboxctl.conf 5 ,
 .Xr hier 7 ,
 .Xr pkg_comp4cron 8 ,
 .Xr sandboxctl 8
